@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Matematik Savaşları: Arena v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            background-color: #1a1a1a;
+            user-select: none;
+        }
+
+        .game-font {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+
+        .btn-game {
+            transition: transform 0.05s, filter 0.1s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-game:active {
+            transform: scale(0.92);
+            filter: brightness(0.9);
+        }
+
+        .glass-panel {
+            background: rgba(40, 30, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid #8b4513;
+            border-radius: 1rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            color: #e2e8f0;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .btn-fire-ready {
+            animation: pulse-red 1.5s infinite;
+        }
+
+        /* Flashing timer */
+        .timer-warning {
+            color: #ef4444 !important;
+            animation: pulse-text 0.5s infinite alternate;
+        }
+
+        @keyframes pulse-text {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.2);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900">
+
+    <!-- SELECTION MENU SCREEN -->
+    <div id="menu-screen"
+        class="fixed inset-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 z-50 flex flex-col items-center justify-center p-4">
+
+        <!-- Grade Selection -->
+        <div id="grade-selection" class="text-center">
+            <h1 class="game-font text-4xl md:text-6xl text-yellow-400 mb-8 drop-shadow-lg">MATEMATİK SAVAŞLARI</h1>
+            <h2 class="text-xl md:text-2xl text-white mb-6">Sınıf Seçin</h2>
+            <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                <button onclick="selectGrade(5)"
+                    class="bg-green-600 hover:bg-green-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-green-800 transition-all hover:scale-105">5.
+                    Sınıf</button>
+                <button onclick="selectGrade(6)"
+                    class="bg-blue-600 hover:bg-blue-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-blue-800 transition-all hover:scale-105">6.
+                    Sınıf</button>
+                <button onclick="selectGrade(7)"
+                    class="bg-purple-600 hover:bg-purple-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-purple-800 transition-all hover:scale-105">7.
+                    Sınıf</button>
+                <button onclick="selectGrade(8)"
+                    class="bg-red-600 hover:bg-red-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-red-800 transition-all hover:scale-105">8.
+                    Sınıf</button>
+            </div>
+        </div>
+
+        <!-- Topic Selection -->
+        <div id="topic-selection" class="text-center hidden">
+            <h2 class="text-xl md:text-2xl text-white mb-2"><span id="selected-grade-text"></span></h2>
+            <h3 class="text-lg text-gray-300 mb-6">Konu Seçin</h3>
+            <div id="topic-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-lg mx-auto mb-6"></div>
+            <button onclick="backToGrade()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i>
+                Geri</button>
+        </div>
+
+        <!-- Player Selection -->
+        <div id="player-selection" class="text-center hidden">
+            <h2 class="text-xl md:text-2xl text-white mb-2"><span id="selected-topic-text"></span></h2>
+            <h3 class="text-lg text-gray-300 mb-6">Oyuncu Sayısı</h3>
+            <div class="flex gap-4 justify-center mb-6">
+                <button onclick="startGameWithPlayers(2)"
+                    class="bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-xl font-bold py-4 px-8 rounded-xl border-b-4 border-yellow-700 transition-all hover:scale-105">2
+                    Kişi</button>
+                <button onclick="startGameWithPlayers(3)"
+                    class="bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-xl font-bold py-4 px-8 rounded-xl border-b-4 border-yellow-700 transition-all hover:scale-105">3
+                    Kişi</button>
+                <button onclick="startGameWithPlayers(4)"
+                    class="bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-xl font-bold py-4 px-8 rounded-xl border-b-4 border-yellow-700 transition-all hover:scale-105">4
+                    Kişi</button>
+            </div>
+            <button onclick="backToTopic()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i>
+                Geri</button>
+        </div>
+    </div>
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+
+    <!-- UI Overlay -->
+    <div id="ui-layer" class="p-2 select-none">
+
+        <!-- Top HUD -->
+        <div class="flex flex-col w-full pointer-events-none z-10 gap-2">
+            <div class="flex justify-between items-center w-full px-2">
+                <button onclick="goToMenu()"
+                    class="interactive bg-gray-700/80 hover:bg-red-600 text-white p-2 rounded-lg border border-gray-500 text-xs font-bold shadow-lg transition-colors">
+                    <i class="fas fa-home"></i> MENÜ
+                </button>
+
+                <div class="flex items-center gap-2">
+                    <div
+                        class="bg-gray-800/90 text-white px-3 py-1 rounded-full border border-gray-600 font-bold text-lg shadow-lg">
+                        <span id="turn-timer" class="text-yellow-400 transition-all duration-200">45</span>
+                    </div>
+                    <div
+                        class="bg-white/20 backdrop-blur px-3 py-1 rounded-lg flex items-center gap-2 text-white text-xs font-bold border border-white/30">
+                        <i class="fas fa-wind text-gray-300"></i>
+                        <i id="wind-icon" class="fas fa-arrow-right"></i>
+                        <span id="wind-text">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="health-bars-container" class="flex justify-around items-start w-full px-2 flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Commentary Box -->
+        <div id="commentary"
+            class="absolute top-32 left-1/2 transform -translate-x-1/2 w-full max-w-md pointer-events-none transition-opacity duration-500 opacity-0 z-0">
+            <div
+                class="bg-black/60 backdrop-blur-md text-white p-3 rounded-xl border border-gray-500/50 text-center shadow-lg mx-4">
+                <div
+                    class="flex items-center justify-center gap-2 mb-1 text-yellow-300 text-xs font-bold uppercase tracking-widest">
+                    <i class="fas fa-volume-up"></i> SPİKER
+                </div>
+                <p id="comment-text" class="text-sm md:text-base font-medium italic text-gray-100">Maç başlıyor!</p>
+            </div>
+        </div>
+
+        <!-- Power Meter -->
+        <div id="power-container"
+            class="absolute top-24 left-1/2 transform -translate-x-1/2 w-64 h-8 bg-gray-900 border-2 border-white rounded-lg overflow-hidden hidden shadow-[0_0_15px_rgba(255,255,0,0.5)] z-20">
+            <div id="power-fill" class="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-600 w-0"></div>
+            <span
+                class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-md">GÜÇ</span>
+        </div>
+
+        <!-- Turn Message -->
+        <div id="message-area"
+            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none hidden z-20 w-full">
+            <h2 id="message-text"
+                class="text-5xl md:text-7xl game-font text-white drop-shadow-[0_4px_0_#000] stroke-black"
+                style="-webkit-text-stroke: 2px black;">TUR</h2>
+            <div id="game-over-controls" class="mt-8 pointer-events-auto hidden">
+                <button onclick="goToMenu()"
+                    class="interactive px-8 py-3 bg-green-600 hover:bg-green-500 text-white text-xl font-bold rounded-xl shadow-lg border-b-4 border-green-800">
+                    ANA MENÜYE DÖN
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="mt-auto w-full flex justify-between items-end pb-4 interactive z-10">
+            <!-- Movement -->
+            <div class="flex gap-3 items-end">
+                <div class="flex gap-1 bg-gray-800/50 p-2 rounded-2xl backdrop-blur-sm border border-white/10">
+                    <button id="btn-left"
+                        class="btn-game w-14 h-14 bg-gray-200 rounded-lg shadow-lg border-b-4 border-gray-400 text-gray-700 text-xl flex items-center justify-center">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button id="btn-right"
+                        class="btn-game w-14 h-14 bg-gray-200 rounded-lg shadow-lg border-b-4 border-gray-400 text-gray-700 text-xl flex items-center justify-center">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <!-- Jump Button -->
+                <button id="btn-jump"
+                    class="btn-game w-14 h-14 bg-yellow-400 rounded-full shadow-lg border-b-4 border-yellow-600 text-yellow-900 text-xl mb-2 flex items-center justify-center">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+            </div>
+
+            <!-- Action Area -->
+            <div class="flex gap-4 items-end">
+                <div class="flex flex-col gap-1 bg-gray-800/50 p-2 rounded-2xl backdrop-blur-sm border border-white/10">
+                    <button id="btn-aim-up"
+                        class="btn-game w-12 h-12 bg-gray-300 rounded-lg border-b-4 border-gray-500 text-gray-700 shadow">
+                        <i class="fas fa-angle-up"></i>
+                    </button>
+                    <button id="btn-aim-down"
+                        class="btn-game w-12 h-12 bg-gray-300 rounded-lg border-b-4 border-gray-500 text-gray-700 shadow">
+                        <i class="fas fa-angle-down"></i>
+                    </button>
+                </div>
+
+                <button id="btn-quiz"
+                    class="btn-game w-20 h-20 bg-blue-500 rounded-2xl border-b-8 border-blue-700 text-white text-3xl shadow-xl flex items-center justify-center animate-bounce">
+                    <i class="fas fa-lock-open"></i>
+                </button>
+                <button id="btn-fire"
+                    class="hidden btn-game w-24 h-24 bg-red-600 rounded-full border-b-8 border-red-800 text-white text-4xl shadow-[0_0_20px_rgba(255,0,0,0.6)] flex items-center justify-center btn-fire-ready">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Math Modal -->
+    <div id="math-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden p-4">
+        <div class="glass-panel w-full max-w-2xl p-6 relative overflow-hidden flex flex-col items-center">
+            <h3 class="text-3xl text-yellow-400 mb-2 game-font text-center drop-shadow-md">KİLİDİ AÇ!</h3>
+            <p class="text-gray-300 text-center mb-4 text-sm">Doğru cevap verip silahını şarj et.</p>
+            <div
+                class="bg-gray-900/50 p-6 rounded-xl border border-yellow-700 mb-6 w-full relative min-h-[100px] flex items-center justify-center">
+                <span id="question-text"
+                    class="text-xl md:text-2xl font-bold text-white font-mono tracking-wide block text-center"></span>
+            </div>
+            <div id="answers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full"></div>
+        </div>
+    </div>
+
+    <!-- Old start-screen removed - now using menu-screen with grade/topic selection -->
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- AUDIO MANAGER ---
+        const AudioSys = {
+            ctx: null,
+            init: function () {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+            },
+            playTone: function (freq, type, duration, vol = 0.1) {
+                if (!this.ctx) this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + duration);
+            },
+            playJump: function () { this.playTone(280, "triangle", 0.15, 0.15); setTimeout(() => this.playTone(350, "triangle", 0.1, 0.1), 50); },
+            playShoot: function () { this.playTone(150, "sawtooth", 0.1, 0.2); this.playTone(400, "square", 0.2, 0.15); },
+            playExplosion: function () { this.playTone(60, "sawtooth", 0.4, 0.4); setTimeout(() => this.playTone(40, "square", 0.3, 0.3), 100); },
+            playSplash: function () { this.playTone(200, "sine", 0.3, 0.15); this.playTone(120, "sine", 0.4, 0.2); },
+            playCharge: function (val) { this.playTone(150 + val * 3, "sine", 0.06, 0.08); },
+            playTick: function () { this.playTone(600, "square", 0.03, 0.1); },
+            playCorrect: function () { this.playTone(523, "sine", 0.15, 0.2); setTimeout(() => this.playTone(659, "sine", 0.2, 0.2), 100); },
+            playWrong: function () { this.playTone(200, "sawtooth", 0.3, 0.2); }
+        };
+
+        // --- CONFIG ---
+        let width, height;
+
+        let gameState = "MENU";
+        let currentPlayer = 0;
+        let totalPlayers = 2;
+        let heightmap = []; // Legacy for spawn only
+        let terrainCanvas = document.createElement('canvas');
+        let terrainCtx = terrainCanvas.getContext('2d');
+        let waterLevel = 0;
+        let wind = 0;
+        let projectiles = [];
+        let explosions = [];
+        let particles = [];
+        let floatTexts = [];
+        let turnTimer = 45;
+        let turnInterval;
+        let power = 0;
+        let powerDir = 0.5;
+        let isPowering = false;
+
+        // Touch control states for simultaneous input
+        let moveDir = 0;
+        let moveInterval = null;
+        let turnChangePending = false;
+
+        // CAMERA SYSTEM for large scrollable map
+        let mapWidth = 2400;  // Larger than screen
+        let mapHeight = 1200; // Larger than screen
+        let cameraX = 0;
+        let cameraY = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let manualPanTimer = 0; // When > 0, disable auto-follow
+
+        // MENU STATE
+        let selectedGrade = null;
+        let selectedTopic = null;
+
+        // TOPICS PER GRADE
+        const gradeTopics = {
+            5: ["Doğal Sayılar", "Kesirler", "Geometrik Şekiller", "Çevre ve Alan"],
+            6: ["Tam Sayılar", "Kesirler", "Oran-Orantı", "Denklem", "Açılar", "Hacim"],
+            7: ["Rasyonel Sayılar", "Cebirsel İfadeler", "Denklemler", "Dörtgenler", "Çember"],
+            8: ["Üslü İfadeler", "Kareköklü İfadeler", "Özdeşlikler", "Olasılık", "Denklemler"]
+        };
+
+        // MENU FUNCTIONS
+        function selectGrade(grade) {
+            selectedGrade = grade;
+            document.getElementById('grade-selection').classList.add('hidden');
+            document.getElementById('topic-selection').classList.remove('hidden');
+            document.getElementById('selected-grade-text').innerText = grade + '. Sınıf';
+
+            const container = document.getElementById('topic-buttons');
+            container.innerHTML = '';
+            gradeTopics[grade].forEach(topic => {
+                const btn = document.createElement('button');
+                btn.className = 'bg-teal-600 hover:bg-teal-500 text-white text-lg font-bold py-3 px-6 rounded-xl border-b-4 border-teal-800 transition-all hover:scale-105';
+                btn.innerText = topic;
+                btn.onclick = () => selectTopic(topic);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectTopic(topic) {
+            selectedTopic = topic;
+            document.getElementById('topic-selection').classList.add('hidden');
+            document.getElementById('player-selection').classList.remove('hidden');
+            document.getElementById('selected-topic-text').innerText = selectedGrade + '. Sınıf - ' + topic;
+        }
+
+        function backToGrade() {
+            document.getElementById('topic-selection').classList.add('hidden');
+            document.getElementById('grade-selection').classList.remove('hidden');
+        }
+
+        function backToTopic() {
+            document.getElementById('player-selection').classList.add('hidden');
+            document.getElementById('topic-selection').classList.remove('hidden');
+        }
+
+        function startGameWithPlayers(count) {
+            totalPlayers = count;
+            document.getElementById('menu-screen').classList.add('hidden');
+            startGame(count);
+        }
+
+        // Team Configs
+        const teamConfigs = [
+            { name: "MAVİ", color: "#60a5fa", body: "#3b82f6", outline: "#1e3a8a", bg: "bg-blue-600" },
+            { name: "KIRMIZI", color: "#f87171", body: "#ef4444", outline: "#7f1d1d", bg: "bg-red-600" },
+            { name: "YEŞİL", color: "#4ade80", body: "#22c55e", outline: "#14532d", bg: "bg-green-600" },
+            { name: "MOR", color: "#c084fc", body: "#a855f7", outline: "#581c87", bg: "bg-purple-600" }
+        ];
+
+        let teams = [];
+
+        // --- COMMENTS ---
+        const comments = {
+            start: ["Hazır mısınız?", "Savaş başlasın!", "Mağaraya hoşgeldiniz!"],
+            hit: ["Tam isabet!", "Bum!", "Fena vurdu!", "Hesap tuttu!"],
+            miss: ["Karavana!", "Rüzgarı unuttun!", "Karanlıkta göremedi!", "Iskaladı!"],
+            water: ["Boğuldu!", "Balık yemi oldu!", "Yüzme biliyor mu?"],
+            win: ["Şampiyon belli!", "Zafer!", "Oyun bitti!"],
+            draw: ["Dostluk kazandı!", "Berabere!", "İkisi de gitti!"],
+            powerup: ["Hediye!", "Bonus!", "Şanslısın!"]
+        };
+
+        // --- POWER-UP SYSTEM ---
+        let powerups = [];
+        let powerupTimer = 0;
+        let extraQuizChance = [0, 0, 0, 0]; // Per team
+
+        class PowerUp {
+            constructor() {
+                this.x = 100 + Math.random() * (mapWidth - 200);
+                this.y = -50; // Start above screen
+                this.vy = 0;
+                this.size = 25;
+                this.active = true;
+                this.grounded = false;
+                // Random type: 0 = health (+25), 1 = extra quiz
+                this.type = Math.random() > 0.5 ? 'health' : 'quiz';
+                this.animTimer = 0;
+            }
+
+            update() {
+                if (!this.active) return;
+
+                this.animTimer++;
+
+                if (!this.grounded) {
+                    this.vy += 0.2; // Gravity
+                    this.y += this.vy;
+
+                    // Land on terrain
+                    if (checkCollision(this.x, this.y + this.size)) {
+                        this.grounded = true;
+                        this.vy = 0;
+                    }
+                }
+
+                // Check collection by worms
+                for (let t of teams) {
+                    for (let w of t.worms) {
+                        if (!w.dead && Math.hypot(w.x - this.x, w.y - this.y) < 40) {
+                            this.collect(t, w);
+                            return;
+                        }
+                    }
+                }
+
+                // Timeout after 10 seconds (shorter)
+                if (this.animTimer > 600) this.active = false;
+            }
+
+            collect(team, worm) {
+                this.active = false;
+                AudioSys.playTone(800, "sine", 0.2);
+                showComment('powerup');
+
+                if (this.type === 'health') {
+                    worm.health = Math.min(100, worm.health + 25);
+                    floatTexts.push({ x: this.x, y: this.y, text: "+25 CAN", vy: -1, life: 1 });
+                } else {
+                    let teamIdx = teams.indexOf(team);
+                    extraQuizChance[teamIdx]++;
+                    floatTexts.push({ x: this.x, y: this.y, text: "+1 SORU", vy: -1, life: 1 });
+                }
+                updateHUD();
+            }
+
+            draw() {
+                if (!this.active) return;
+
+                let bob = Math.sin(this.animTimer * 0.08) * 2;
+
+                // Fade out when about to disappear (last 3 sec)
+                let alpha = this.animTimer > 420 ? 1 - (this.animTimer - 420) / 180 : 1;
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.translate(this.x, this.y + bob);
+
+                // WORMS-STYLE WOODEN CRATE
+                let s = this.size;
+
+                // Main wood body
+                let woodGrad = ctx.createLinearGradient(-s / 2, -s / 2, s / 2, s / 2);
+                woodGrad.addColorStop(0, "#D4A574");
+                woodGrad.addColorStop(0.5, "#B8956E");
+                woodGrad.addColorStop(1, "#8B6914");
+
+                ctx.fillStyle = woodGrad;
+                ctx.fillRect(-s / 2, -s / 2, s, s);
+
+                // Wood plank lines
+                ctx.strokeStyle = "#6B4423";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-s / 2, -s / 6); ctx.lineTo(s / 2, -s / 6);
+                ctx.moveTo(-s / 2, s / 6); ctx.lineTo(s / 2, s / 6);
+                ctx.stroke();
+
+                // Metal corner brackets
+                ctx.fillStyle = "#4A4A4A";
+                let cornerSize = 6;
+                // Top-left
+                ctx.fillRect(-s / 2, -s / 2, cornerSize, cornerSize * 2);
+                ctx.fillRect(-s / 2, -s / 2, cornerSize * 2, cornerSize);
+                // Top-right
+                ctx.fillRect(s / 2 - cornerSize, -s / 2, cornerSize, cornerSize * 2);
+                ctx.fillRect(s / 2 - cornerSize * 2, -s / 2, cornerSize * 2, cornerSize);
+                // Bottom corners
+                ctx.fillRect(-s / 2, s / 2 - cornerSize * 2, cornerSize, cornerSize * 2);
+                ctx.fillRect(-s / 2, s / 2 - cornerSize, cornerSize * 2, cornerSize);
+                ctx.fillRect(s / 2 - cornerSize, s / 2 - cornerSize * 2, cornerSize, cornerSize * 2);
+                ctx.fillRect(s / 2 - cornerSize * 2, s / 2 - cornerSize, cornerSize * 2, cornerSize);
+
+                // Metal rivets
+                ctx.fillStyle = "#7A7A7A";
+                ctx.beginPath();
+                ctx.arc(-s / 2 + 3, -s / 2 + 3, 2, 0, Math.PI * 2);
+                ctx.arc(s / 2 - 3, -s / 2 + 3, 2, 0, Math.PI * 2);
+                ctx.arc(-s / 2 + 3, s / 2 - 3, 2, 0, Math.PI * 2);
+                ctx.arc(s / 2 - 3, s / 2 - 3, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Icon in center
+                ctx.font = "bold 16px Arial";
+                ctx.fillStyle = this.type === 'health' ? "#e74c3c" : "#3498db";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(this.type === 'health' ? "+" : "?", 0, 0);
+
+                ctx.restore();
+            }
+        }
+
+        function spawnPowerUp() {
+            if (powerups.length < 3) {
+                powerups.push(new PowerUp());
+            }
+        }
+
+        function showComment(type) {
+            const list = comments[type] || comments['miss'];
+            const text = list[Math.floor(Math.random() * list.length)];
+            const el = document.getElementById('commentary');
+            document.getElementById('comment-text').innerText = text;
+            el.style.opacity = '1';
+            setTimeout(() => { el.style.opacity = '0'; }, 3000);
+        }
+
+        // --- MATH SYSTEM - GRADE/TOPIC BASED QUESTION BANKS ---
+        let usedQuestions = new Set();
+
+        const questionBanks = {
+            5: {
+                "Doğal Sayılar": [
+                    { q: "24 + 36 = ?", a: "60", d: ["50", "70", "56"] },
+                    { q: "85 - 27 = ?", a: "58", d: ["62", "52", "68"] },
+                    { q: "12 × 5 = ?", a: "60", d: ["55", "65", "50"] },
+                    { q: "72 ÷ 8 = ?", a: "9", d: ["8", "7", "6"] },
+                    { q: "15 × 4 = ?", a: "60", d: ["45", "55", "65"] },
+                    { q: "100 - 37 = ?", a: "63", d: ["67", "73", "53"] },
+                    { q: "8 × 7 = ?", a: "56", d: ["54", "48", "63"] },
+                    { q: "144 ÷ 12 = ?", a: "12", d: ["11", "13", "14"] },
+                    { q: "25 × 4 = ?", a: "100", d: ["90", "80", "110"] },
+                    { q: "81 ÷ 9 = ?", a: "9", d: ["8", "7", "10"] },
+                    { q: "17 + 28 = ?", a: "45", d: ["35", "55", "43"] },
+                    { q: "63 - 29 = ?", a: "34", d: ["32", "36", "44"] },
+                    { q: "11 × 11 = ?", a: "121", d: ["111", "131", "122"] },
+                    { q: "96 ÷ 8 = ?", a: "12", d: ["11", "10", "13"] },
+                    { q: "50 + 75 = ?", a: "125", d: ["115", "135", "120"] },
+                    { q: "200 - 85 = ?", a: "115", d: ["105", "125", "110"] },
+                    { q: "9 × 9 = ?", a: "81", d: ["72", "90", "79"] },
+                    { q: "108 ÷ 9 = ?", a: "12", d: ["11", "13", "10"] },
+                    { q: "33 + 47 = ?", a: "80", d: ["70", "90", "78"] },
+                    { q: "156 - 78 = ?", a: "78", d: ["68", "88", "82"] }
+                ],
+                "Kesirler": [
+                    { q: "1/2 + 1/2 = ?", a: "1", d: ["2", "1/4", "2/4"] },
+                    { q: "3/4 + 1/4 = ?", a: "1", d: ["4/8", "2/4", "1/2"] },
+                    { q: "1/2 + 1/4 = ?", a: "3/4", d: ["2/6", "1/6", "2/4"] },
+                    { q: "5/8 - 3/8 = ?", a: "2/8", d: ["1/8", "3/8", "8/8"] },
+                    { q: "2/3 + 1/3 = ?", a: "1", d: ["3/6", "3/3", "2/3"] },
+                    { q: "7/10 - 3/10 = ?", a: "4/10", d: ["3/10", "5/10", "10/10"] },
+                    { q: "1/5 + 2/5 = ?", a: "3/5", d: ["2/5", "4/5", "3/10"] },
+                    { q: "4/6'nın sadeleşmiş hali?", a: "2/3", d: ["1/2", "3/4", "4/6"] },
+                    { q: "6/9'un sadeleşmiş hali?", a: "2/3", d: ["3/4", "1/3", "3/6"] },
+                    { q: "1/3 kaç yediliktir?", a: "Yaklaşık 2/6", d: ["1/6", "3/6", "4/6"] },
+                    { q: "3/4 ile 2/4 toplamı?", a: "5/4", d: ["5/8", "1", "6/4"] },
+                    { q: "Hangisi 1/2'ye eşit?", a: "2/4", d: ["1/4", "3/4", "2/3"] },
+                    { q: "10/20'nin sadeleşmiş hali?", a: "1/2", d: ["1/4", "2/4", "5/10"] },
+                    { q: "1 tam = kaç yarım?", a: "2", d: ["1", "3", "4"] },
+                    { q: "1/4 + 1/4 + 1/4 = ?", a: "3/4", d: ["1", "2/4", "4/4"] }
+                ],
+                "Geometrik Şekiller": [
+                    { q: "Üçgenin kaç kenarı var?", a: "3", d: ["4", "5", "2"] },
+                    { q: "Karenin kaç köşesi var?", a: "4", d: ["3", "5", "6"] },
+                    { q: "Dikdörtgenin kaç kenarı var?", a: "4", d: ["3", "5", "6"] },
+                    { q: "Beşgenin kaç açısı var?", a: "5", d: ["4", "6", "3"] },
+                    { q: "Altıgenin kenar sayısı?", a: "6", d: ["5", "7", "8"] },
+                    { q: "Dairenin kaç köşesi var?", a: "0", d: ["1", "2", "Sonsuz"] },
+                    { q: "Eşkenar üçgende tüm kenarlar?", a: "Eşit", d: ["Farklı", "2'si eşit", "Belirsiz"] },
+                    { q: "Karede tüm açılar kaç derece?", a: "90", d: ["60", "45", "180"] },
+                    { q: "Üçgenin iç açıları toplamı?", a: "180°", d: ["360°", "90°", "270°"] },
+                    { q: "Dörtgenin iç açıları toplamı?", a: "360°", d: ["180°", "270°", "540°"] },
+                    { q: "Paralel kenarlar hangi şekilde var?", a: "Paralelkenar", d: ["Üçgen", "Daire", "Yıldız"] },
+                    { q: "Eşkenar dörtgen hangisi?", a: "Kare", d: ["Dikdörtgen", "Yamuk", "Üçgen"] }
+                ],
+                "Çevre ve Alan": [
+                    { q: "Kenarı 5 cm olan karenin çevresi?", a: "20 cm", d: ["25 cm", "15 cm", "10 cm"] },
+                    { q: "Kenarı 4 cm olan karenin alanı?", a: "16 cm²", d: ["8 cm²", "12 cm²", "20 cm²"] },
+                    { q: "6×4 dikdörtgenin çevresi?", a: "20 cm", d: ["24 cm", "10 cm", "18 cm"] },
+                    { q: "5×3 dikdörtgenin alanı?", a: "15 cm²", d: ["16 cm²", "8 cm²", "18 cm²"] },
+                    { q: "Kenarı 10 cm karenin çevresi?", a: "40 cm", d: ["100 cm", "20 cm", "30 cm"] },
+                    { q: "7×2 dikdörtgenin alanı?", a: "14 cm²", d: ["9 cm²", "18 cm²", "12 cm²"] },
+                    { q: "Kenarı 3 cm karenin alanı?", a: "9 cm²", d: ["6 cm²", "12 cm²", "15 cm²"] },
+                    { q: "8×5 dikdörtgenin çevresi?", a: "26 cm", d: ["40 cm", "13 cm", "24 cm"] },
+                    { q: "Çevresi 24 cm olan karenin kenarı?", a: "6 cm", d: ["4 cm", "8 cm", "12 cm"] },
+                    { q: "Alanı 36 cm² olan karenin kenarı?", a: "6 cm", d: ["9 cm", "4 cm", "12 cm"] }
+                ]
+            },
+            6: {
+                "Tam Sayılar": [
+                    { q: "(-5) + 3 = ?", a: "-2", d: ["2", "-8", "8"] },
+                    { q: "(-7) + (-4) = ?", a: "-11", d: ["11", "-3", "3"] },
+                    { q: "8 - 12 = ?", a: "-4", d: ["4", "-20", "20"] },
+                    { q: "(-6) × 2 = ?", a: "-12", d: ["12", "-8", "8"] },
+                    { q: "(-3) × (-4) = ?", a: "12", d: ["-12", "7", "-7"] },
+                    { q: "15 ÷ (-3) = ?", a: "-5", d: ["5", "-3", "3"] },
+                    { q: "(-20) ÷ (-4) = ?", a: "5", d: ["-5", "4", "-4"] },
+                    { q: "(-9) + 9 = ?", a: "0", d: ["18", "-18", "1"] },
+                    { q: "|−7| = ?", a: "7", d: ["-7", "0", "1"] },
+                    { q: "|5 - 12| = ?", a: "7", d: ["-7", "17", "-17"] },
+                    { q: "(-2)³ = ?", a: "-8", d: ["8", "-6", "6"] },
+                    { q: "(-1)¹⁰ = ?", a: "1", d: ["-1", "0", "10"] },
+                    { q: "-15 + 8 = ?", a: "-7", d: ["7", "-23", "23"] },
+                    { q: "(-4) × 5 = ?", a: "-20", d: ["20", "-9", "9"] },
+                    { q: "0 - 8 = ?", a: "-8", d: ["8", "0", "-0"] }
+                ],
+                "Kesirler": [
+                    { q: "2/3 + 1/6 = ?", a: "5/6", d: ["3/9", "3/6", "1/2"] },
+                    { q: "3/4 - 1/2 = ?", a: "1/4", d: ["2/4", "1/2", "2/2"] },
+                    { q: "2/5 × 3 = ?", a: "6/5", d: ["5/5", "6/15", "5/6"] },
+                    { q: "1/2 ÷ 1/4 = ?", a: "2", d: ["1/8", "4", "1/2"] },
+                    { q: "5/6 - 1/3 = ?", a: "1/2", d: ["4/6", "2/3", "1/6"] },
+                    { q: "3/8 + 1/8 = ?", a: "1/2", d: ["4/16", "2/8", "3/4"] },
+                    { q: "2/3 × 3/4 = ?", a: "1/2", d: ["6/7", "5/12", "6/12"] },
+                    { q: "4/5 ÷ 2 = ?", a: "2/5", d: ["8/5", "4/10", "2/10"] },
+                    { q: "1 - 3/8 = ?", a: "5/8", d: ["3/8", "4/8", "2/8"] },
+                    { q: "7/10 + 1/5 = ?", a: "9/10", d: ["8/15", "8/10", "6/10"] }
+                ],
+                "Oran-Orantı": [
+                    { q: "4:6 oranını sadeleştir", a: "2:3", d: ["1:2", "3:4", "4:6"] },
+                    { q: "x/6 = 2/3 ise x = ?", a: "4", d: ["3", "2", "6"] },
+                    { q: "3/5 = x/15 ise x = ?", a: "9", d: ["5", "3", "12"] },
+                    { q: "12'nin 3/4'ü kaçtır?", a: "9", d: ["8", "6", "10"] },
+                    { q: "20'nin %25'i kaçtır?", a: "5", d: ["4", "6", "10"] },
+                    { q: "8 ile 12'nin oranı?", a: "2:3", d: ["3:4", "4:6", "1:2"] },
+                    { q: "15'in 2/5'i kaçtır?", a: "6", d: ["5", "3", "10"] },
+                    { q: "x/4 = 12/16 ise x = ?", a: "3", d: ["4", "6", "8"] },
+                    { q: "24'ün %50'si kaçtır?", a: "12", d: ["6", "24", "18"] },
+                    { q: "30'un 1/6'sı kaçtır?", a: "5", d: ["6", "3", "10"] }
+                ],
+                "Denklem": [
+                    { q: "x + 5 = 12 ise x = ?", a: "7", d: ["5", "17", "6"] },
+                    { q: "2x = 14 ise x = ?", a: "7", d: ["6", "8", "28"] },
+                    { q: "x - 8 = 3 ise x = ?", a: "11", d: ["5", "-5", "24"] },
+                    { q: "3x + 2 = 11 ise x = ?", a: "3", d: ["4", "2", "5"] },
+                    { q: "x/4 = 5 ise x = ?", a: "20", d: ["1", "9", "25"] },
+                    { q: "2x - 6 = 10 ise x = ?", a: "8", d: ["2", "16", "4"] },
+                    { q: "5x = 35 ise x = ?", a: "7", d: ["6", "8", "30"] },
+                    { q: "x + x + x = 15 ise x = ?", a: "5", d: ["3", "15", "45"] },
+                    { q: "4x - 8 = 0 ise x = ?", a: "2", d: ["4", "8", "-2"] },
+                    { q: "x/3 + 2 = 5 ise x = ?", a: "9", d: ["3", "6", "15"] }
+                ],
+                "Açılar": [
+                    { q: "Dik açı kaç derece?", a: "90°", d: ["180°", "45°", "360°"] },
+                    { q: "Doğru açı kaç derece?", a: "180°", d: ["90°", "360°", "270°"] },
+                    { q: "Tam açı kaç derece?", a: "360°", d: ["180°", "270°", "90°"] },
+                    { q: "45° hangi tür açı?", a: "Dar açı", d: ["Dik açı", "Geniş açı", "Doğru açı"] },
+                    { q: "120° hangi tür açı?", a: "Geniş açı", d: ["Dar açı", "Dik açı", "Tam açı"] },
+                    { q: "İki bütünler açının toplamı?", a: "90°", d: ["180°", "360°", "45°"] },
+                    { q: "İki tümler açının toplamı?", a: "180°", d: ["90°", "360°", "270°"] },
+                    { q: "60°'nin bütünleyeni kaç derece?", a: "30°", d: ["120°", "60°", "90°"] },
+                    { q: "50°'nin tümleyeni kaç derece?", a: "130°", d: ["40°", "50°", "310°"] },
+                    { q: "Karşı açılar birbirine?", a: "Eşit", d: ["Farklı", "Tümler", "Bütünler"] }
+                ],
+                "Hacim": [
+                    { q: "2×3×4 küpün hacmi?", a: "24", d: ["9", "14", "36"] },
+                    { q: "Kenarı 3 cm küpün hacmi?", a: "27 cm³", d: ["9 cm³", "18 cm³", "81 cm³"] },
+                    { q: "5×2×3 dikdörtgenler prizmasının hacmi?", a: "30", d: ["10", "25", "15"] },
+                    { q: "Hacmi 64 cm³ olan küpün kenarı?", a: "4 cm", d: ["8 cm", "16 cm", "2 cm"] },
+                    { q: "Kenarı 5 cm küpün hacmi?", a: "125 cm³", d: ["25 cm³", "75 cm³", "15 cm³"] },
+                    { q: "4×4×4 küpün hacmi?", a: "64", d: ["16", "48", "12"] },
+                    { q: "3×5×2 prizmanın hacmi?", a: "30", d: ["10", "15", "25"] },
+                    { q: "Kenarı 2 cm küpün hacmi?", a: "8 cm³", d: ["4 cm³", "6 cm³", "12 cm³"] }
+                ]
+            },
+            7: {
+                "Rasyonel Sayılar": [
+                    { q: "-3/4 + 1/4 = ?", a: "-1/2", d: ["-2/4", "1/2", "-1/4"] },
+                    { q: "2/5 × (-3/4) = ?", a: "-6/20", d: ["6/20", "-6/9", "5/9"] },
+                    { q: "(-1/2) ÷ (1/4) = ?", a: "-2", d: ["2", "-1/8", "1/8"] },
+                    { q: "-0.5 + 0.3 = ?", a: "-0.2", d: ["0.2", "-0.8", "0.8"] },
+                    { q: "|-3/5| = ?", a: "3/5", d: ["-3/5", "5/3", "-5/3"] },
+                    { q: "(-2/3)² = ?", a: "4/9", d: ["-4/9", "2/9", "-2/9"] },
+                    { q: "-1.5 × 2 = ?", a: "-3", d: ["3", "-0.75", "0.75"] },
+                    { q: "3/4 - 5/4 = ?", a: "-1/2", d: ["1/2", "2/4", "-2/4"] },
+                    { q: "0.25 × 4 = ?", a: "1", d: ["0.1", "1.25", "0.5"] },
+                    { q: "-7/8 + 7/8 = ?", a: "0", d: ["14/8", "-14/8", "7/4"] }
+                ],
+                "Cebirsel İfadeler": [
+                    { q: "3x + 2x = ?", a: "5x", d: ["6x", "5x²", "x"] },
+                    { q: "4a - a = ?", a: "3a", d: ["5a", "4", "3"] },
+                    { q: "2x × 3x = ?", a: "6x²", d: ["5x", "6x", "5x²"] },
+                    { q: "12y ÷ 4 = ?", a: "3y", d: ["3", "8y", "48y"] },
+                    { q: "2(x + 3) = ?", a: "2x + 6", d: ["2x + 3", "x + 6", "2x + 5"] },
+                    { q: "5x + 3 - 2x = ?", a: "3x + 3", d: ["7x + 3", "3x - 3", "5x"] },
+                    { q: "x × x × x = ?", a: "x³", d: ["3x", "x + 3", "3x²"] },
+                    { q: "-3(2a - 1) = ?", a: "-6a + 3", d: ["-6a - 3", "6a + 3", "-6a - 1"] },
+                    { q: "4m + 2m - 3m = ?", a: "3m", d: ["9m", "3m²", "3"] },
+                    { q: "(2x)(3y) = ?", a: "6xy", d: ["5xy", "6x + 6y", "2x + 3y"] }
+                ],
+                "Denklemler": [
+                    { q: "3x - 5 = 10 ise x = ?", a: "5", d: ["15", "3", "-5"] },
+                    { q: "2(x + 4) = 14 ise x = ?", a: "3", d: ["7", "5", "11"] },
+                    { q: "5x + 3 = 3x + 9 ise x = ?", a: "3", d: ["6", "2", "-3"] },
+                    { q: "x/2 - 3 = 4 ise x = ?", a: "14", d: ["7", "2", "1"] },
+                    { q: "4(x - 2) = 12 ise x = ?", a: "5", d: ["3", "4", "6"] },
+                    { q: "-2x + 8 = 0 ise x = ?", a: "4", d: ["-4", "2", "-2"] },
+                    { q: "3x + 2 = x + 8 ise x = ?", a: "3", d: ["6", "5", "2"] },
+                    { q: "x - 7 = 2x - 12 ise x = ?", a: "5", d: ["-5", "19", "-19"] },
+                    { q: "6x = 2x + 20 ise x = ?", a: "5", d: ["4", "10", "20"] },
+                    { q: "(x + 5)/2 = 6 ise x = ?", a: "7", d: ["12", "1", "17"] }
+                ],
+                "Dörtgenler": [
+                    { q: "Paralelkenarın karşı açıları?", a: "Eşit", d: ["Farklı", "90°", "Bütünler"] },
+                    { q: "Karenin köşegenleri birbirini?", a: "Dik keser", d: ["Eşit keser", "Paralel", "Kesmez"] },
+                    { q: "Dikdörtgenin köşegenleri?", a: "Eşit", d: ["Farklı", "Dik", "Paralel"] },
+                    { q: "Eşkenar dörtgenin kenarları?", a: "Eşit", d: ["Farklı", "İkisi eşit", "Paralel"] },
+                    { q: "Yamuğun kaç kenarı paralel?", a: "2", d: ["0", "4", "1"] },
+                    { q: "Paralelkenarın karşı kenarları?", a: "Eşit ve paralel", d: ["Dik", "Farklı", "Kesişir"] },
+                    { q: "Karenin tüm açıları?", a: "90°", d: ["60°", "45°", "120°"] },
+                    { q: "Eşkenar dörtgende köşegenler?", a: "Dik", d: ["Eşit", "Paralel", "Üst üste"] }
+                ],
+                "Çember": [
+                    { q: "Yarıçapı r olan dairenin çevresi?", a: "2πr", d: ["πr", "πr²", "2r"] },
+                    { q: "Yarıçapı r olan dairenin alanı?", a: "πr²", d: ["2πr", "πr", "r²"] },
+                    { q: "Çapı 10 cm olan dairenin yarıçapı?", a: "5 cm", d: ["10 cm", "20 cm", "2.5 cm"] },
+                    { q: "r = 7 cm ise çevre ≈ ? (π≈3)", a: "42 cm", d: ["21 cm", "14 cm", "49 cm"] },
+                    { q: "r = 5 cm ise alan ≈ ? (π≈3)", a: "75 cm²", d: ["30 cm²", "15 cm²", "25 cm²"] },
+                    { q: "Çap ile yarıçap ilişkisi?", a: "Çap = 2 × Yarıçap", d: ["Çap = Yarıçap", "Yarıçap = 2 × Çap", "Eşit"] },
+                    { q: "Merkez açı 90° ise yay uzunluğu çevrenin kaçta kaçıdır?", a: "1/4", d: ["1/2", "1/3", "3/4"] }
+                ]
+            },
+            8: {
+                "Üslü İfadeler": [
+                    { q: "2³ = ?", a: "8", d: ["6", "9", "4"] },
+                    { q: "5² = ?", a: "25", d: ["10", "15", "125"] },
+                    { q: "2⁴ = ?", a: "16", d: ["8", "32", "12"] },
+                    { q: "3³ = ?", a: "27", d: ["9", "81", "18"] },
+                    { q: "10³ = ?", a: "1000", d: ["100", "30", "1"] },
+                    { q: "2⁵ = ?", a: "32", d: ["10", "16", "64"] },
+                    { q: "(-2)² = ?", a: "4", d: ["-4", "2", "-2"] },
+                    { q: "(-3)³ = ?", a: "-27", d: ["27", "-9", "9"] },
+                    { q: "7⁰ = ?", a: "1", d: ["0", "7", "-1"] },
+                    { q: "2³ × 2² = ?", a: "32", d: ["12", "64", "10"] },
+                    { q: "3⁴ ÷ 3² = ?", a: "9", d: ["81", "27", "3"] },
+                    { q: "(2³)² = ?", a: "64", d: ["12", "32", "128"] },
+                    { q: "5¹ = ?", a: "5", d: ["1", "0", "25"] },
+                    { q: "4² × 4 = ?", a: "64", d: ["16", "12", "256"] }
+                ],
+                "Kareköklü İfadeler": [
+                    { q: "√9 = ?", a: "3", d: ["9", "81", "4.5"] },
+                    { q: "√16 = ?", a: "4", d: ["8", "2", "256"] },
+                    { q: "√25 = ?", a: "5", d: ["12.5", "625", "10"] },
+                    { q: "√49 = ?", a: "7", d: ["24.5", "14", "343"] },
+                    { q: "√100 = ?", a: "10", d: ["50", "1000", "20"] },
+                    { q: "√64 = ?", a: "8", d: ["32", "4", "16"] },
+                    { q: "√144 = ?", a: "12", d: ["72", "14", "24"] },
+                    { q: "√1 = ?", a: "1", d: ["0", "2", "-1"] },
+                    { q: "√36 = ?", a: "6", d: ["18", "3", "12"] },
+                    { q: "√81 = ?", a: "9", d: ["40.5", "27", "18"] },
+                    { q: "√4 + √9 = ?", a: "5", d: ["√13", "6", "13"] },
+                    { q: "√25 - √16 = ?", a: "1", d: ["√9", "9", "3"] },
+                    { q: "√36 × √4 = ?", a: "12", d: ["√40", "24", "8"] }
+                ],
+                "Özdeşlikler": [
+                    { q: "(x + 2)² açılımı?", a: "x² + 4x + 4", d: ["x² + 4", "x² + 2x + 4", "x² + 4x + 2"] },
+                    { q: "(a - 3)² açılımı?", a: "a² - 6a + 9", d: ["a² - 9", "a² - 3a + 9", "a² + 6a + 9"] },
+                    { q: "(x + 5)(x - 5) = ?", a: "x² - 25", d: ["x² + 25", "x² - 10x - 25", "2x - 25"] },
+                    { q: "(2x + 1)² açılımı?", a: "4x² + 4x + 1", d: ["2x² + 2x + 1", "4x² + 1", "4x² + 2x + 1"] },
+                    { q: "x² - 9 = ?", a: "(x-3)(x+3)", d: ["(x-9)(x+9)", "(x-3)²", "(x+3)²"] },
+                    { q: "(a + b)² = ?", a: "a² + 2ab + b²", d: ["a² + b²", "a² + ab + b²", "2a² + 2b²"] },
+                    { q: "(a - b)² = ?", a: "a² - 2ab + b²", d: ["a² - b²", "a² + 2ab + b²", "a² - ab + b²"] },
+                    { q: "(x + 1)² - (x - 1)² = ?", a: "4x", d: ["2", "2x²", "4x²"] },
+                    { q: "25 - x² = ?", a: "(5-x)(5+x)", d: ["(25-x)(25+x)", "(5-x)²", "(x-5)(x+5)"] },
+                    { q: "(3x)² = ?", a: "9x²", d: ["6x²", "3x²", "9x"] }
+                ],
+                "Olasılık": [
+                    { q: "Yazı-tura atışında yazı gelme olasılığı?", a: "1/2", d: ["1", "1/4", "2"] },
+                    { q: "Zarla 6 gelme olasılığı?", a: "1/6", d: ["1/3", "6", "1"] },
+                    { q: "Zarla çift sayı gelme olasılığı?", a: "1/2", d: ["1/3", "1/6", "2/3"] },
+                    { q: "Zarla 7 gelme olasılığı?", a: "0", d: ["1/7", "1/6", "1"] },
+                    { q: "3K, 2M olan torbadan K çekme olasılığı?", a: "3/5", d: ["2/5", "1/2", "3/2"] },
+                    { q: "Olasılık değeri hangi aralıkta?", a: "0 ile 1", d: ["-1 ile 1", "0 ile 100", "1 ile 10"] },
+                    { q: "İmkansız olayın olasılığı?", a: "0", d: ["1", "-1", "∞"] },
+                    { q: "Kesin olayın olasılığı?", a: "1", d: ["0", "100", "∞"] },
+                    { q: "Zarla 3'ten büyük sayı olasılığı?", a: "1/2", d: ["1/3", "2/3", "1/6"] },
+                    { q: "52 karttan kupa as çekme olasılığı?", a: "1/52", d: ["4/52", "13/52", "1/4"] }
+                ],
+                "Denklemler": [
+                    { q: "x² = 9 ise x = ?", a: "±3", d: ["3", "-3", "81"] },
+                    { q: "x² - 4 = 0 ise x = ?", a: "±2", d: ["2", "-2", "4"] },
+                    { q: "2x² = 18 ise x = ?", a: "±3", d: ["9", "3", "-3"] },
+                    { q: "x² + 5 = 14 ise x = ?", a: "±3", d: ["9", "3", "19"] },
+                    { q: "3x - 2 = x + 6 ise x = ?", a: "4", d: ["2", "8", "-4"] },
+                    { q: "x² = 25 ise x = ?", a: "±5", d: ["5", "-5", "625"] },
+                    { q: "4x + 3 = 2x + 11 ise x = ?", a: "4", d: ["7", "2", "14"] },
+                    { q: "x² - 1 = 0 ise x = ?", a: "±1", d: ["1", "-1", "0"] },
+                    { q: "5(x - 2) = 3x + 4 ise x = ?", a: "7", d: ["4", "2", "14"] },
+                    { q: "x²/4 = 4 ise x = ?", a: "±4", d: ["4", "16", "2"] }
+                ]
+            }
+        };
+
+        function generateQuestion() {
+            const bank = questionBanks[selectedGrade]?.[selectedTopic] || questionBanks[8]["Özdeşlikler"];
+
+            if (usedQuestions.size >= bank.length) {
+                usedQuestions.clear();
+            }
+
+            let idx;
+            do {
+                idx = Math.floor(Math.random() * bank.length);
+            } while (usedQuestions.has(idx));
+
+            usedQuestions.add(idx);
+
+            const qData = bank[idx];
+            return {
+                q: qData.q,
+                a: qData.a,
+                options: [qData.a, ...qData.d].sort(() => Math.random() - 0.5)
+            };
+        }
+
+        // --- IMAGES ---
+        const wormSprite = new Image(); wormSprite.src = "worm_sprite.png";
+        const terrainImg = new Image(); terrainImg.src = "terrain_texture.png";
+        const skyBg = new Image(); skyBg.src = "sky_background.png";
+
+        // --- ENTITIES ---
+        class Worm {
+            constructor(x, teamIdx) {
+                this.x = x; this.team = teamIdx;
+                this.radius = 20; // Increased size
+                this.y = getTerrainHeight(x) - this.radius;
+                this.angle = 0;
+                this.aimAngle = -Math.PI / 4;
+                this.health = 100; this.dead = false;
+                this.vx = 0; this.vy = 0; this.animTimer = 0;
+
+                if (x > mapWidth / 2) this.flip();
+            }
+
+            flip() {
+                if (this.angle === 0) {
+                    this.angle = Math.PI;
+                    this.aimAngle = -Math.PI - this.aimAngle;
+                } else {
+                    this.angle = 0;
+                    this.aimAngle = -Math.PI - this.aimAngle;
+                }
+            }
+
+            setFacing(dir) {
+                if (dir > 0 && this.angle !== 0) this.flip();
+                if (dir < 0 && this.angle === 0) this.flip();
+            }
+
+            update() {
+                if (this.dead) return;
+
+                this.vy += 0.35; // Gravity
+
+                // Move X
+                if (Math.abs(this.vx) > 0.1) {
+                    for (let i = 0; i < Math.abs(this.vx); i++) {
+                        let step = Math.sign(this.vx);
+                        if (!checkCollision(this.x + step, this.y)) {
+                            this.x += step;
+                        } else if (!checkCollision(this.x + step, this.y - 2)) {
+                            // Step up GENTLE slope only (2px max)
+                            this.x += step; this.y -= 2;
+                        } else {
+                            this.vx = 0; break;
+                        }
+                    }
+                }
+
+                // Move Y
+                if (Math.abs(this.vy) > 0.1) {
+                    let steps = Math.ceil(Math.abs(this.vy));
+                    let stepY = this.vy / steps;
+                    for (let i = 0; i < steps; i++) {
+                        if (!checkCollision(this.x, this.y + stepY)) {
+                            this.y += stepY;
+                        } else {
+                            if (this.vy > 0) this.grounded = true;
+                            this.vy = 0; break;
+                        }
+                    }
+                } else {
+                    if (checkCollision(this.x, this.y + 1)) this.grounded = true;
+                    else this.grounded = false;
+                }
+
+                this.vx *= 0.8;
+                this.animTimer++;
+
+                if (this.y > waterLevel + 10) {
+                    this.health = 0; this.dead = true;
+                    createSplash(this.x, this.y); AudioSys.playSplash(); showComment('water');
+                    checkDeaths(); updateHUD(); checkGameOver();
+                }
+                if (this.x < 10) this.x = 10; if (this.x > mapWidth - 10) this.x = mapWidth - 10;
+            }
+
+            draw() {
+                if (this.dead) return;
+                ctx.save(); ctx.translate(this.x, this.y);
+                const teamData = teams[this.team];
+
+                // Health Bar
+                if (gameState !== 'FIRE_ANIM') {
+                    ctx.fillStyle = teamData.color; ctx.font = "bold 12px Nunito"; ctx.textAlign = "center";
+                    ctx.shadowColor = "black"; ctx.shadowBlur = 4;
+                    ctx.fillText(this.health + "%", 0, -40); ctx.shadowBlur = 0;
+                }
+
+                const lookDir = Math.cos(this.angle) > 0 ? 1 : -1;
+                let breath = Math.sin(this.animTimer * 0.1) * 1.5;
+
+                // --- PROCEDURAL WORM ---
+                // Body segments (from tail to head)
+                const segments = [
+                    { ox: -8 * lookDir, oy: 8 + breath * 0.5, r: 7 },  // Tail
+                    { ox: -2 * lookDir, oy: 2 + breath * 0.3, r: 9 },  // Body 1
+                    { ox: 3 * lookDir, oy: -5 + breath * 0.2, r: 10 }, // Body 2 (main)
+                    { ox: 6 * lookDir, oy: -14 + breath, r: 11 }       // Head
+                ];
+
+                // Draw each segment with 3D gradient
+                segments.forEach((seg, i) => {
+                    // Shadow
+                    ctx.fillStyle = "rgba(0,0,0,0.25)";
+                    ctx.beginPath(); ctx.arc(seg.ox + 2, seg.oy + 2, seg.r, 0, Math.PI * 2); ctx.fill();
+
+                    // 3D Sphere Gradient
+                    let grad = ctx.createRadialGradient(
+                        seg.ox - seg.r * 0.35, seg.oy - seg.r * 0.35, seg.r * 0.1,
+                        seg.ox, seg.oy, seg.r
+                    );
+                    grad.addColorStop(0, teamData.color);
+                    grad.addColorStop(0.5, teamData.bodyColor || teamData.body);
+                    grad.addColorStop(1, teamData.outline);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath(); ctx.arc(seg.ox, seg.oy, seg.r, 0, Math.PI * 2); ctx.fill();
+
+                    // Subtle shine arc
+                    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(seg.ox, seg.oy, seg.r * 0.7, -Math.PI * 0.6, -Math.PI * 0.2);
+                    ctx.stroke();
+                });
+
+                // --- EYES ---
+                const headSeg = segments[3];
+                const eyeOffsetX = 3 * lookDir;
+                const eyeY = headSeg.oy - 2;
+
+                // Eye whites
+                ctx.fillStyle = "white";
+                ctx.beginPath(); ctx.ellipse(headSeg.ox + eyeOffsetX - 3 * lookDir, eyeY, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(headSeg.ox + eyeOffsetX + 3 * lookDir, eyeY, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+                // Pupils (track aim angle slightly)
+                const pupilOffset = Math.cos(this.aimAngle) * 1.5;
+                ctx.fillStyle = "#1a1a1a";
+                ctx.beginPath(); ctx.arc(headSeg.ox + eyeOffsetX - 3 * lookDir + pupilOffset, eyeY + 1, 2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(headSeg.ox + eyeOffsetX + 3 * lookDir + pupilOffset, eyeY + 1, 2, 0, Math.PI * 2); ctx.fill();
+
+                // Eye glints
+                ctx.fillStyle = "rgba(255,255,255,0.9)";
+                ctx.beginPath(); ctx.arc(headSeg.ox + eyeOffsetX - 4 * lookDir, eyeY - 2, 1.2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(headSeg.ox + eyeOffsetX + 2 * lookDir, eyeY - 2, 1.2, 0, Math.PI * 2); ctx.fill();
+
+                // --- HEADBAND (active player) ---
+                if (teams[currentPlayer].worms.includes(this)) {
+                    ctx.fillStyle = this.team === 0 ? "#2563eb" : (this.team === 1 ? "#dc2626" : (this.team === 2 ? "#15803d" : "#7e22ce"));
+                    ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 8;
+                    ctx.fillRect(headSeg.ox - 7, headSeg.oy - headSeg.r - 3 + breath, 14, 4);
+                    ctx.shadowBlur = 0;
+                }
+
+                // --- AIM LINE & INDICATOR ---
+                if (teams[currentPlayer].worms.includes(this) && gameState !== "FIRE_ANIM") {
+                    const hX = headSeg.ox, hY = headSeg.oy - 5;
+                    const ax = hX + Math.cos(this.aimAngle) * 70;
+                    const ay = hY + Math.sin(this.aimAngle) * 70;
+
+                    // Laser Sight
+                    ctx.beginPath();
+                    let grad = ctx.createLinearGradient(hX, hY, ax, ay);
+                    grad.addColorStop(0, "rgba(255,255,255,0.8)");
+                    grad.addColorStop(1, "rgba(255,255,255,0)");
+                    ctx.strokeStyle = grad; ctx.lineWidth = 2; ctx.moveTo(hX, hY); ctx.lineTo(ax, ay); ctx.stroke();
+
+                    // Holographic-style aim indicator
+                    ctx.save();
+                    ctx.translate(ax, ay);
+                    ctx.rotate(this.aimAngle);
+
+                    // Outer spinning-style rings
+                    ctx.shadowColor = teamData.color;
+                    ctx.shadowBlur = 10;
+                    ctx.strokeStyle = teamData.color;
+                    ctx.lineWidth = 2;
+
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 14, -1, 1);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 14, Math.PI - 1, Math.PI + 1);
+                    ctx.stroke();
+
+                    // Inner glass sphere
+                    let circleGrad = ctx.createRadialGradient(-3, -3, 2, 0, 0, 11);
+                    circleGrad.addColorStop(0, "#fff");
+                    circleGrad.addColorStop(0.3, teamData.color);
+                    circleGrad.addColorStop(1, "rgba(0,0,0,0.5)");
+
+                    ctx.fillStyle = circleGrad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 11, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Pointer arrow (sharp)
+                    ctx.fillStyle = "#fff";
+                    ctx.beginPath();
+                    ctx.moveTo(15, 0);
+                    ctx.lineTo(6, -6);
+                    ctx.lineTo(6, 6);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Central crosshair dot
+                    ctx.fillStyle = "#fff";
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+                }
+                ctx.restore();
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, angle, force) {
+                this.x = x; this.y = y; this.radius = 5;
+                // POWER ADJUSTMENT: Lower multiplier for better control at low power
+                const speed = Math.min(force * 1.8, 16);
+                this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+                this.active = true; this.timer = 0;
+            }
+            update() {
+                if (!this.active) return;
+
+                // Pixel-step for accuracy
+                const steps = 4;
+                for (let s = 0; s < steps; s++) {
+                    this.x += this.vx / steps;
+                    this.y += this.vy / steps;
+
+                    if (checkCollision(this.x, this.y)) {
+                        explode(this.x, this.y, 65);
+                        this.active = false;
+                        return;
+                    }
+
+                    // Direct hit check
+                    for (let t of teams) {
+                        for (let w of t.worms) {
+                            if (!w.dead && Math.hypot(w.x - this.x, w.y - this.y) < 15) {
+                                explode(this.x, this.y, 70);
+                                this.active = false;
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                this.vy += 0.12;
+                // WIND IMPACT: Reduced to 0.003 for subtler effect as requested
+                this.vx += wind * 0.003;
+                this.timer++;
+
+                if (this.timer % 2 === 0) {
+                    particles.push({ x: this.x, y: this.y, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, life: 1.5, color: "#ff6600", size: 5 });
+                }
+
+                // Only destroy if out of MAP bounds (not screen) or too long
+                // Allow going above screen (y < -500) - it will fall back
+                if (this.x < -100 || this.x > mapWidth + 100 || this.y > waterLevel + 100 || this.timer > 600) {
+                    this.active = false; showComment('miss'); endTurnDelayed(1000); return;
+                }
+            }
+            draw() {
+                if (!this.active) return;
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(Math.atan2(this.vy, this.vx));
+
+                // Glowing trail
+                ctx.shadowColor = "red"; ctx.shadowBlur = 10;
+
+                // 3D Missile
+                let grad = ctx.createRadialGradient(-2, -2, 0, 0, 0, 8);
+                grad.addColorStop(0, "#fff");
+                grad.addColorStop(0.3, "#fca5a5");
+                grad.addColorStop(1, "#dc2626");
+
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.ellipse(0, 0, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
+        function init() {
+            window.addEventListener('resize', resize);
+            setupControls();
+            resize();
+            requestAnimationFrame(loop);
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            waterLevel = mapHeight - 60; // Water at bottom of large map
+            if (gameState === "MENU") generateMap();
+        }
+
+        function generateMap() {
+            terrainCanvas.width = mapWidth;
+            terrainCanvas.height = mapHeight;
+            terrainCtx.clearRect(0, 0, mapWidth, mapHeight);
+            heightmap = [];
+
+            // 1. Generate VARIED terrain - different each game!
+            // Height range: 30%-70% (higher terrain, more visible)
+            let terrainStyle = Math.floor(Math.random() * 4); // 0-3 different styles
+
+            // Create control points for terrain shape
+            let points = [];
+            let numPoints = 20 + Math.floor(Math.random() * 15); // 20-35 points
+
+            for (let i = 0; i <= numPoints; i++) {
+                let x = (i / numPoints) * mapWidth;
+                let minY, maxY;
+
+                // Different terrain styles
+                switch (terrainStyle) {
+                    case 0: // Hilly - gentle variation
+                        minY = mapHeight * 0.40;
+                        maxY = mapHeight * 0.60;
+                        break;
+                    case 1: // Mountainous - dramatic peaks
+                        minY = mapHeight * 0.20;
+                        maxY = mapHeight * 0.70;
+                        break;
+                    case 2: // Valley - deep dips
+                        let distFromCenter = Math.abs(i - numPoints / 2) / (numPoints / 2);
+                        minY = mapHeight * (0.25 + distFromCenter * 0.25);
+                        maxY = mapHeight * (0.45 + distFromCenter * 0.25);
+                        break;
+                    case 3: // Cliff heavy - vertical walls
+                        minY = mapHeight * 0.30;
+                        maxY = mapHeight * 0.70;
+                        break;
+                }
+
+                let y = minY + Math.random() * (maxY - minY);
+                let isCliff = false; // Mark as vertical cliff
+
+                // Add VERTICAL cliffs (every 2-5 points)
+                if (i > 0 && i % (2 + Math.floor(Math.random() * 4)) === 0) {
+                    // Big vertical drop/rise
+                    let cliffSize = 100 + Math.random() * 150;
+                    y = points[i - 1].y + (Math.random() > 0.5 ? -cliffSize : cliffSize);
+                    y = Math.max(mapHeight * 0.20, Math.min(mapHeight * 0.80, y));
+                    isCliff = true;
+                }
+                points.push({ x, y, isCliff });
+            }
+
+            // Interpolate heightmap - use LINEAR for cliffs, SMOOTH for normal
+            for (let x = 0; x <= mapWidth; x++) {
+                let idx = 0;
+                for (let i = 0; i < points.length - 1; i++) {
+                    if (x >= points[i].x && x <= points[i + 1].x) {
+                        idx = i;
+                        break;
+                    }
+                }
+                let p1 = points[idx];
+                let p2 = points[Math.min(idx + 1, points.length - 1)];
+                let t = (p2.x - p1.x) > 0 ? (x - p1.x) / (p2.x - p1.x) : 0;
+
+                let baseH;
+                if (p2.isCliff) {
+                    // LINEAR interpolation for STEEP vertical cliffs
+                    baseH = p1.y + (p2.y - p1.y) * t;
+                } else {
+                    // Smooth cosine interpolation for normal hills
+                    let smoothT = (1 - Math.cos(t * Math.PI)) / 2;
+                    baseH = p1.y + (p2.y - p1.y) * smoothT;
+                }
+
+                // Add small bumps/details
+                let detail = Math.sin(x * 0.02) * 15 + Math.sin(x * 0.05) * 8 + Math.sin(x * 0.1) * 4;
+                heightmap[x] = baseH + detail;
+            }
+
+            // 2. Draw LAYERED soil - darker as it goes deeper
+            // Layer 1: Topsoil (light brown) - first 30px below grass
+            for (let layer = 0; layer < 4; layer++) {
+                let colors = ["#A0522D", "#8B4513", "#6B3A0A", "#4A2A08"]; // Light to dark
+                let depths = [30, 80, 150, mapHeight]; // Layer thicknesses
+
+                terrainCtx.fillStyle = colors[layer];
+                terrainCtx.beginPath();
+                terrainCtx.moveTo(0, mapHeight);
+
+                for (let x = 0; x <= mapWidth; x++) {
+                    let baseH = heightmap[x];
+                    let layerTop = baseH + (layer > 0 ? depths[layer - 1] : 0);
+                    terrainCtx.lineTo(x, Math.min(layerTop, mapHeight));
+                }
+                terrainCtx.lineTo(mapWidth, mapHeight);
+                terrainCtx.closePath();
+                terrainCtx.fill();
+            }
+
+            // Add soil texture details (small particles)
+            for (let i = 0; i < 500; i++) {
+                let x = Math.random() * mapWidth;
+                let baseH = heightmap[Math.floor(x)] || mapHeight * 0.5;
+                let y = baseH + 20 + Math.random() * 200;
+                if (y > mapHeight - 20) continue;
+
+                // Color based on depth
+                let depth = y - baseH;
+                let shade = Math.floor(60 - depth * 0.2);
+                terrainCtx.fillStyle = `rgb(${shade + 50}, ${shade + 20}, ${shade})`;
+                terrainCtx.fillRect(x, y, 2 + Math.random() * 3, 1 + Math.random() * 2);
+            }
+
+            // 3. Add ANGULAR ROCK/STONE pieces (polygon shapes, DEEP inside terrain)
+            for (let i = 0; i < 100; i++) {
+                let x = Math.random() * mapWidth;
+                let baseH = heightmap[Math.floor(x)] || mapHeight * 0.6;
+                // Much deeper - at least 80px below grass
+                let y = baseH + 80 + Math.random() * 150;
+                // Skip if too close to bottom
+                if (y > mapHeight - 100) continue;
+
+                let size = 10 + Math.random() * 25; // Smaller rocks
+
+                // Create angular polygon rock (5-8 vertices)
+                let numPoints = 5 + Math.floor(Math.random() * 4);
+                let points = [];
+                for (let p = 0; p < numPoints; p++) {
+                    let angle = (p / numPoints) * Math.PI * 2;
+                    let dist = size * (0.6 + Math.random() * 0.4); // Irregular
+                    points.push({
+                        px: x + Math.cos(angle) * dist,
+                        py: y + Math.sin(angle) * dist * 0.7 // Slightly flat
+                    });
+                }
+
+                // Draw with gradient
+                let rockGrad = terrainCtx.createRadialGradient(
+                    x - size * 0.2, y - size * 0.2, 0,
+                    x, y, size
+                );
+                rockGrad.addColorStop(0, "#A09080");
+                rockGrad.addColorStop(0.4, "#706050");
+                rockGrad.addColorStop(1, "#403830");
+
+                terrainCtx.fillStyle = rockGrad;
+                terrainCtx.beginPath();
+                terrainCtx.moveTo(points[0].px, points[0].py);
+                for (let p = 1; p < points.length; p++) {
+                    terrainCtx.lineTo(points[p].px, points[p].py);
+                }
+                terrainCtx.closePath();
+                terrainCtx.fill();
+
+                // Dark edge
+                terrainCtx.strokeStyle = "#2A2520";
+                terrainCtx.lineWidth = 1.5;
+                terrainCtx.stroke();
+            }
+
+            // 4. Add GREEN grass layer on top (following heightmap)
+            terrainCtx.fillStyle = "#4CAF50";
+            terrainCtx.beginPath();
+            terrainCtx.moveTo(0, heightmap[0]);
+            for (let x = 0; x <= mapWidth; x++) {
+                terrainCtx.lineTo(x, heightmap[x]);
+            }
+            // Grass thickness ~15px
+            for (let x = mapWidth; x >= 0; x--) {
+                terrainCtx.lineTo(x, heightmap[x] + 15);
+            }
+            terrainCtx.closePath();
+            terrainCtx.fill();
+
+            // 5. Add grass texture details (darker lines)
+            terrainCtx.strokeStyle = "#388E3C";
+            terrainCtx.lineWidth = 2;
+            for (let x = 0; x < mapWidth; x += 12) {
+                terrainCtx.beginPath();
+                terrainCtx.moveTo(x, heightmap[x]);
+                terrainCtx.lineTo(x + 2, heightmap[x] + 8);
+                terrainCtx.stroke();
+            }
+        }
+
+        function checkCollision(x, y) {
+            if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight) return false;
+            let data = terrainCtx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+            return data[3] > 128; // Alpha threshold
+        }
+
+        function getTerrainHeight(x) {
+            // Scan DOWNWARD from top to find surface (ensures spawn ABOVE terrain)
+            x = Math.floor(Math.max(0, Math.min(mapWidth - 1, x)));
+            for (let y = 0; y < waterLevel; y += 2) {
+                if (checkCollision(x, y)) {
+                    // Found surface! Return position ABOVE it
+                    return y - 5; // 5px above surface
+                }
+            }
+            return heightmap[x] || mapHeight * 0.7; // Fallback
+        }
+
+        // --- SPAWN LOGIC (Distributed across LARGE map) ---
+        function getSafeSpawnX(sectorIndex, totalSectors) {
+            // Divide MAP (not screen) into sectors
+            let safeWidth = mapWidth * 0.8;
+            let startX = (mapWidth - safeWidth) / 2;
+            let sectorSize = safeWidth / (totalSectors - 1);
+
+            // Position based on index
+            let targetX = startX + (sectorIndex * sectorSize);
+
+            // Local search for flat-ish ground
+            let bestX = targetX;
+            let highestY = 9999;
+            for (let x = targetX - 40; x < targetX + 40; x += 10) {
+                if (x < 0 || x > mapWidth) continue;
+                let y = getTerrainHeight(x);
+                if (y < waterLevel - 60 && y < highestY) { highestY = y; bestX = x; }
+            }
+            return bestX;
+        }
+
+        function explode(x, y, radius) {
+            explosions.push({ x, y, r: 0, maxR: radius });
+            AudioSys.playExplosion();
+
+            // 1. Destruct terrain bitmap
+            terrainCtx.globalCompositeOperation = 'destination-out';
+            terrainCtx.beginPath();
+            terrainCtx.arc(x, y, radius, 0, Math.PI * 2);
+            terrainCtx.fill();
+            terrainCtx.globalCompositeOperation = 'source-over';
+
+            // Visual debris
+            for (let i = 0; i < 40; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 18, vy: (Math.random() - 0.5) * 18,
+                    life: 1.2 + Math.random() * 0.6,
+                    color: Math.random() > 0.3 ? (Math.random() > 0.5 ? "#FFA500" : "#FF4500") : "#555",
+                    size: 4 + Math.random() * 4
+                });
+            }
+
+            let hit = false;
+            teams.forEach(t => t.worms.forEach(w => {
+                if (w.dead) return;
+                let d = Math.hypot(w.x - x, w.y - y);
+                if (d < radius + 40) {
+                    hit = true;
+                    let dmg = Math.floor((1 - d / (radius + 40)) * 95);
+                    if (dmg < 10) dmg = 10;
+                    w.health = Math.max(0, w.health - dmg);
+                    floatTexts.push({ x: w.x, y: w.y - 30, text: "-" + dmg, life: 1.5, vy: -1.2 });
+
+                    let ang = Math.atan2(w.y - y, w.x - x);
+                    let force = (1 - d / (radius + 40)) * 18;
+                    w.vx = Math.cos(ang) * force;
+                    w.vy = Math.sin(ang) * force - 4;
+                    w.grounded = false;
+                }
+            }));
+
+            checkDeaths(); updateHUD();
+            if (hit) showComment('hit'); else showComment('miss');
+            endTurnDelayed();
+        }
+
+        function createSplash(x, y) {
+            for (let i = 0; i < 25; i++) particles.push({ x: x, y: y, vx: (Math.random() - 0.5) * 12, vy: -Math.random() * 10, life: 1, color: "rgba(200,230,255,0.9)", size: 4 });
+        }
+
+        function startGame(players) {
+            totalPlayers = players;
+            // Reset used questions for new game
+            usedQuestions.clear();
+            generateMap();
+            AudioSys.init();
+
+            teams = [];
+            // Special logic for 1v1 to put them far apart
+            let sectors = totalPlayers === 2 ? 2 : totalPlayers;
+
+            for (let i = 0; i < totalPlayers; i++) {
+                let conf = teamConfigs[i];
+                // For 2 players: 0 and 1. 
+                // getSafeSpawnX expects index and total count to distribute
+                let spawnX = getSafeSpawnX(i, totalPlayers);
+
+                teams.push({
+                    name: conf.name, color: conf.color, bodyColor: conf.body, outline: conf.outline,
+                    bgClass: conf.bg, worms: [new Worm(spawnX, i)], health: 100
+                });
+            }
+
+            setupHUD();
+            currentPlayer = Math.floor(Math.random() * totalPlayers);
+            newTurn();
+        }
+
+        function setupHUD() {
+            const container = document.getElementById('health-bars-container');
+            container.innerHTML = '';
+            teams.forEach((t, i) => {
+                let div = document.createElement('div');
+                div.className = "flex flex-col items-center";
+                div.innerHTML = `
+                    <div class="bg-gray-800/90 border-2 text-white px-2 py-1 rounded-lg shadow-lg flex flex-col items-center min-w-[70px]" style="border-color:${t.color}">
+                        <span class="text-[10px] font-bold" style="color:${t.color}">${t.name}</span>
+                        <span id="p${i}-health" class="text-lg game-font">100</span>
+                    </div>
+                    <div class="w-16 md:w-20 h-3 bg-gray-800 border border-gray-600 rounded-full mt-1 overflow-hidden">
+                        <div id="p${i}-bar" class="h-full w-full transition-all duration-300 ${t.bgClass}"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateHUD() {
+            teams.forEach((t, i) => {
+                document.getElementById(`p${i}-health`).innerText = t.health;
+                document.getElementById(`p${i}-bar`).style.width = Math.min(100, t.health) + "%";
+            });
+        }
+
+        function goToMenu() {
+            gameState = "MENU";
+            clearInterval(turnInterval);
+            // Show menu and reset to grade selection
+            document.getElementById('menu-screen').classList.remove('hidden');
+            document.getElementById('grade-selection').classList.remove('hidden');
+            document.getElementById('topic-selection').classList.add('hidden');
+            document.getElementById('player-selection').classList.add('hidden');
+            document.getElementById('message-area').classList.add('hidden');
+            document.getElementById('game-over-controls').classList.add('hidden');
+            document.getElementById('math-modal').classList.add('hidden');
+            document.getElementById('btn-quiz').classList.remove('hidden');
+            document.getElementById('btn-fire').classList.add('hidden');
+
+            projectiles = []; explosions = []; particles = []; floatTexts = [];
+            teams.forEach(t => { t.worms = []; t.health = 100; });
+        }
+
+        function newTurn() {
+            if (checkGameOver()) return;
+            turnChangePending = false;
+
+            // Find next team with living worms
+            let loopCount = 0;
+            do {
+                currentPlayer = (currentPlayer + 1) % totalPlayers;
+                loopCount++;
+            } while (!teams[currentPlayer].worms.some(w => !w.dead) && loopCount < totalPlayers + 1);
+
+            gameState = "PLAYING";
+            // DRASTIC WIND: Increased range from -10/+10 to -30/+30 for more challenge
+            wind = Math.floor((Math.random() * 60) - 30);
+            updateWindUI();
+
+            resetActionButtons();
+
+            setTimeout(() => {
+                let worm = teams[currentPlayer].worms[0];
+                if (worm) {
+                    floatTexts.push({ x: worm.x, y: worm.y - 50, text: "Sıra Sende!", life: 2, vy: -0.5 });
+                }
+            }, 500);
+
+            startTimer();
+        }
+
+        function resetActionButtons() {
+            document.getElementById('btn-quiz').classList.remove('hidden');
+            document.getElementById('btn-quiz').disabled = false;
+            document.getElementById('btn-fire').classList.add('hidden');
+        }
+
+        function startTimer() {
+            clearInterval(turnInterval);
+            turnTimer = 45;
+            const el = document.getElementById('turn-timer');
+            el.innerText = turnTimer;
+            el.classList.remove('timer-warning');
+
+            turnInterval = setInterval(() => {
+                if (gameState !== "PLAYING") return;
+                turnTimer--;
+                el.innerText = turnTimer;
+
+                if (turnTimer <= 10) el.classList.add('timer-warning');
+                else el.classList.remove('timer-warning');
+
+                if (turnTimer <= 5) AudioSys.playTick();
+
+                if (turnTimer <= 0) {
+                    showComment('miss');
+                    endTurnDelayed();
+                }
+            }, 1000);
+        }
+
+        function endTurnDelayed(ms = 2000) {
+            if (turnChangePending) return;
+            turnChangePending = true;
+            clearInterval(turnInterval);
+            setTimeout(newTurn, ms);
+        }
+
+        function checkDeaths() {
+            teams.forEach(t => {
+                t.worms.forEach(w => {
+                    if (w.health <= 0) w.dead = true;
+                });
+            });
+        }
+
+        function checkGameOver() {
+            let aliveTeams = teams.filter(t => t.health > 0 && t.worms.some(w => !w.dead));
+            // Just counting teams with active worms + health logic if applicable
+            // Simplified: if generic health 100 on team obj not used, rely on worms
+            aliveTeams = teams.filter(t => t.worms.some(w => !w.dead));
+
+            if (aliveTeams.length <= 1) {
+                gameState = "GAME_OVER";
+                clearInterval(turnInterval);
+                let winner = aliveTeams.length === 1 ? aliveTeams[0].name + " KAZANDI!" : "BERABERE!";
+                document.getElementById('message-text').innerText = winner;
+                document.getElementById('message-area').classList.remove('hidden');
+                document.getElementById('game-over-controls').classList.remove('hidden');
+                AudioSys.playTone(400, "triangle", 0.5);
+                setTimeout(() => AudioSys.playTone(600, "triangle", 0.8), 200);
+                return true;
+            }
+            return false;
+        }
+
+
+        function loop() {
+            // Clear screen
+            ctx.clearRect(0, 0, width, height);
+
+            // AUTO-FOLLOW - projectile first, then worm (unless manual pan)
+            if (manualPanTimer > 0) {
+                manualPanTimer--; // Count down
+            } else {
+                let target = null;
+
+                // Follow active projectile first
+                let activeProj = projectiles.find(p => p.active);
+                if (activeProj) {
+                    target = { x: activeProj.x, y: activeProj.y };
+                } else if (gameState === "PLAYING" && teams[currentPlayer] && teams[currentPlayer].worms[0]) {
+                    let worm = teams[currentPlayer].worms[0];
+                    if (!worm.dead) target = { x: worm.x, y: worm.y };
+                }
+
+                if (target) {
+                    let targetCamX = target.x - width / 2;
+                    let targetCamY = target.y - height / 2;
+                    cameraX += (targetCamX - cameraX) * 0.15; // Faster follow for projectile
+                    cameraY += (targetCamY - cameraY) * 0.15;
+                }
+            }
+
+            // Clamp camera to map bounds
+            cameraX = Math.max(0, Math.min(cameraX, mapWidth - width));
+            cameraY = Math.max(0, Math.min(cameraY, mapHeight - height));
+
+            // Background - Image (stretched to viewport)
+            if (skyBg.complete) {
+                ctx.drawImage(skyBg, 0, 0, width, height);
+            } else {
+                // Fallback gradient
+                const grad = ctx.createLinearGradient(0, 0, 0, height);
+                grad.addColorStop(0, "#0f172a"); grad.addColorStop(1, "#334155");
+                ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
+            }
+
+            // CAMERA OFFSET - translate all game objects
+            ctx.save();
+            ctx.translate(-cameraX, -cameraY);
+
+            // Draw Terrain Canvas (from large map)
+            ctx.drawImage(terrainCanvas, 0, 0);
+
+            // Water with reflection
+            let waterGrad = ctx.createLinearGradient(0, waterLevel, 0, mapHeight);
+            waterGrad.addColorStop(0, "rgba(56, 189, 248, 0.8)");
+            waterGrad.addColorStop(1, "rgba(3, 105, 161, 0.95)");
+            ctx.fillStyle = waterGrad;
+            ctx.fillRect(0, waterLevel, mapWidth, mapHeight - waterLevel);
+
+            // Wave line
+            ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 3; ctx.beginPath();
+            let waveOffset = Date.now() * 0.003;
+            ctx.moveTo(0, waterLevel);
+            for (let x = 0; x <= mapWidth; x += 30) ctx.lineTo(x, waterLevel + Math.sin(x * 0.03 + waveOffset) * 5);
+            ctx.stroke();
+
+            teams.forEach(t => t.worms.forEach(w => { w.update(); w.draw(); }));
+            projectiles.forEach((p, i) => { p.update(); p.draw(); if (!p.active) projectiles.splice(i, 1); });
+
+            // POWER-UPS: update, draw, spawn
+            powerups.forEach((pu, i) => { pu.update(); pu.draw(); if (!pu.active) powerups.splice(i, 1); });
+
+            // Spawn power-up every ~45 seconds (less frequent)
+            if (gameState === "PLAYING") {
+                powerupTimer++;
+                if (powerupTimer > 2700) {
+                    spawnPowerUp();
+                    powerupTimer = 0;
+                }
+            }
+
+            explosions.forEach((e, i) => {
+                e.r += 3;
+                const progress = e.r / e.maxR;
+
+                // Glowing 3D explosion with lighter blend
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+
+                // Outer glow
+                let outerGrad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r);
+                outerGrad.addColorStop(0, `rgba(255, 200, 50, ${0.8 * (1 - progress)})`);
+                outerGrad.addColorStop(0.5, `rgba(255, 100, 0, ${0.5 * (1 - progress)})`);
+                outerGrad.addColorStop(1, `rgba(80, 20, 0, 0)`);
+                ctx.fillStyle = outerGrad;
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+
+                // Inner white-hot core
+                if (progress < 0.6) {
+                    let coreGrad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r * 0.5);
+                    coreGrad.addColorStop(0, `rgba(255, 255, 255, ${1 - progress})`);
+                    coreGrad.addColorStop(0.5, `rgba(255, 255, 100, ${0.8 - progress})`);
+                    coreGrad.addColorStop(1, `rgba(255, 150, 0, 0)`);
+                    ctx.fillStyle = coreGrad;
+                    ctx.beginPath(); ctx.arc(e.x, e.y, e.r * 0.5, 0, Math.PI * 2); ctx.fill();
+                }
+                ctx.restore();
+
+                if (e.r > e.maxR) explosions.splice(i, 1);
+            });
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.03;
+                ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 1; if (p.life <= 0) particles.splice(i, 1);
+            });
+            floatTexts.forEach((ft, i) => {
+                ft.y += ft.vy; ft.life -= 0.02;
+                ctx.save(); ctx.font = "bold 20px Fredoka One";
+                ctx.fillStyle = `rgba(255, 255, 0, ${ft.life})`; ctx.strokeStyle = `rgba(0, 0, 0, ${ft.life})`; ctx.lineWidth = 3;
+                ctx.strokeText(ft.text, ft.x, ft.y); ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore(); if (ft.life <= 0) floatTexts.splice(i, 1);
+            });
+
+            // Restore camera offset
+            ctx.restore();
+
+            requestAnimationFrame(loop);
+        }
+
+        // --- CONTROLS ---
+        function setupControls() {
+            // CAMERA PAN - Mouse drag (right-click)
+            canvas.addEventListener('mousedown', (e) => {
+                if (e.button === 2) { // Right-click drag
+                    isDragging = true;
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                    manualPanTimer = 120; // Pause auto-follow for 2 sec
+                    e.preventDefault();
+                }
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    cameraX -= e.clientX - lastMouseX;
+                    cameraY -= e.clientY - lastMouseY;
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                    manualPanTimer = 120; // Reset timer while dragging
+                }
+            });
+            canvas.addEventListener('mouseup', () => isDragging = false);
+            canvas.addEventListener('mouseleave', () => isDragging = false);
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault()); // Disable right-click menu
+
+            // CAMERA PAN - Single finger touch drag
+            let lastTouchX = 0, lastTouchY = 0;
+            let touchPanning = false;
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    touchPanning = true;
+                    lastTouchX = e.touches[0].clientX;
+                    lastTouchY = e.touches[0].clientY;
+                    manualPanTimer = 120;
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchmove', (e) => {
+                if (touchPanning && e.touches.length === 1) {
+                    let tx = e.touches[0].clientX;
+                    let ty = e.touches[0].clientY;
+                    cameraX -= tx - lastTouchX;
+                    cameraY -= ty - lastTouchY;
+                    lastTouchX = tx;
+                    lastTouchY = ty;
+                    manualPanTimer = 120;
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchend', () => touchPanning = false);
+
+            // Touch / Mouse for UI buttons
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+            const btnJump = document.getElementById('btn-jump');
+            const btnAimUp = document.getElementById('btn-aim-up');
+            const btnAimDown = document.getElementById('btn-aim-down');
+            const btnQuiz = document.getElementById('btn-quiz');
+            const btnFire = document.getElementById('btn-fire');
+
+            // Movement with interval for CONTINUOUS movement while held
+            let moveInterval = null;
+
+            const startMove = (dir) => {
+                moveDir = dir;
+                const w = teams[currentPlayer].worms[0];
+                if (!w || w.dead || gameState !== "PLAYING") return;
+                w.setFacing(dir);
+
+                // Clear any existing interval
+                if (moveInterval) clearInterval(moveInterval);
+
+                // Continuous movement while button held
+                moveInterval = setInterval(() => {
+                    const w = teams[currentPlayer].worms[0];
+                    if (!w || w.dead || gameState !== "PLAYING") {
+                        clearInterval(moveInterval);
+                        moveInterval = null;
+                        return;
+                    }
+                    w.vx = moveDir * 3;
+                }, 50);
+            };
+
+            const stopMove = () => {
+                if (moveInterval) {
+                    clearInterval(moveInterval);
+                    moveInterval = null;
+                }
+                moveDir = 0;
+            };
+
+            btnLeft.addEventListener('touchstart', (e) => { startMove(-1); }, { passive: true });
+            btnLeft.addEventListener('touchend', () => { stopMove(); }, { passive: true });
+            btnLeft.addEventListener('mousedown', (e) => { startMove(-1); });
+            btnLeft.addEventListener('mouseup', () => { stopMove(); });
+            btnLeft.addEventListener('mouseleave', () => { stopMove(); });
+
+            btnRight.addEventListener('touchstart', (e) => { startMove(1); }, { passive: true });
+            btnRight.addEventListener('touchend', () => { stopMove(); }, { passive: true });
+            btnRight.addEventListener('mousedown', (e) => { startMove(1); });
+            btnRight.addEventListener('mouseup', () => { stopMove(); });
+            btnRight.addEventListener('mouseleave', () => { stopMove(); });
+
+            // Jump - STRICTLY LIMITED
+            const doJump = () => {
+                const w = teams[currentPlayer].worms[0];
+                if (w && w.grounded && gameState === "PLAYING") {
+                    w.vy = -6.0; // Slightly higher jump
+                    w.grounded = false;
+                    const facingDir = Math.cos(w.angle) > 0 ? 1 : -1;
+                    // ADVANCE JUMP: Jump button also moves worm forward for smart boards
+                    w.vx = facingDir * 4.5;
+                    AudioSys.playJump();
+                }
+            };
+
+            btnJump.addEventListener('touchstart', doJump, { passive: true });
+            btnJump.addEventListener('mousedown', doJump);
+
+            // Aiming - ULTRA PRECISE (1 degree steps)
+            let aimInterval = null;
+            const aim = (delta) => {
+                const w = teams[currentPlayer].worms[0];
+                if (!w || gameState !== "PLAYING") return;
+                w.aimAngle += delta;
+            };
+
+            const AIM_STEP = 0.01745; // Exactly 1 degree in radians
+
+            btnAimUp.addEventListener('mousedown', () => {
+                aim(-AIM_STEP); // CORRECTED: negative = up visually (towards -PI/2)
+                aimInterval = setInterval(() => aim(-AIM_STEP), 60);
+            });
+            btnAimUp.addEventListener('mouseup', () => clearInterval(aimInterval));
+            btnAimUp.addEventListener('mouseleave', () => clearInterval(aimInterval));
+            btnAimUp.addEventListener('touchstart', (e) => {
+                aim(-AIM_STEP);
+                aimInterval = setInterval(() => aim(-AIM_STEP), 60);
+            }, { passive: true });
+            btnAimUp.addEventListener('touchend', () => clearInterval(aimInterval), { passive: true });
+
+            btnAimDown.addEventListener('mousedown', () => {
+                aim(AIM_STEP); // CORRECTED: positive = down visually (towards 0)
+                aimInterval = setInterval(() => aim(AIM_STEP), 60);
+            });
+            btnAimDown.addEventListener('mouseup', () => clearInterval(aimInterval));
+            btnAimDown.addEventListener('mouseleave', () => clearInterval(aimInterval));
+            btnAimDown.addEventListener('touchstart', (e) => {
+                aim(AIM_STEP);
+                aimInterval = setInterval(() => aim(AIM_STEP), 60);
+            }, { passive: true });
+            btnAimDown.addEventListener('touchend', () => clearInterval(aimInterval), { passive: true });
+
+            // Quiz
+            btnQuiz.addEventListener('click', () => {
+                if (gameState !== "PLAYING") return;
+                openMathModal();
+            });
+
+            // Fire (Hold) - MUCH SLOWER power bar
+            const startCharge = (e) => {
+                if (e.cancelable) e.preventDefault();
+                if (gameState !== "PLAYING" || document.getElementById('btn-fire').classList.contains('hidden')) return;
+                isPowering = true; power = 0; powerDir = 0.5; // Very slow charge
+                document.getElementById('power-container').classList.remove('hidden');
+                chargeLoop();
+            };
+
+            const endCharge = (e) => {
+                if (e.cancelable) e.preventDefault();
+                if (!isPowering) return;
+                isPowering = false;
+                document.getElementById('power-container').classList.add('hidden');
+                fireProjectile();
+            };
+
+            btnFire.addEventListener('mousedown', startCharge);
+            btnFire.addEventListener('touchstart', startCharge);
+            btnFire.addEventListener('mouseup', endCharge);
+            btnFire.addEventListener('touchend', endCharge);
+
+            // Keyboard
+            window.addEventListener('keydown', (e) => {
+                if (gameState !== "PLAYING") return;
+                const w = teams[currentPlayer].worms[0];
+                if (!w) return;
+
+                if (e.key === 'ArrowLeft') { w.vx = -2; w.setFacing(-1); }
+                if (e.key === 'ArrowRight') { w.vx = 2; w.setFacing(1); }
+                if (e.key === 'ArrowUp') btnAimUp.dispatchEvent(new Event('mousedown'));
+                if (e.key === 'ArrowDown') btnAimDown.dispatchEvent(new Event('mousedown'));
+                if (e.key === ' ') {
+                    if (w.grounded) { w.vy = -6; w.grounded = false; AudioSys.playJump(); }
+                }
+                if (e.key === 'Enter') {
+                    if (document.getElementById('btn-fire').classList.contains('hidden')) {
+                        openMathModal();
+                    } else {
+                        // Simulate Fire Key (Charge) logic needs keyup/down separation or simple toggle
+                    }
+                }
+            });
+        }
+
+        function chargeLoop() {
+            if (!isPowering) return;
+            power += powerDir;
+            if (power >= 100 || power <= 0) powerDir *= -1;
+            document.getElementById('power-fill').style.width = power + "%";
+            AudioSys.playCharge(power);
+            requestAnimationFrame(chargeLoop);
+        }
+
+        function fireProjectile() {
+            const w = teams[currentPlayer].worms[0];
+            if (!w) return;
+
+            gameState = "FIRE_ANIM";
+            document.getElementById('btn-fire').classList.add('hidden'); // Hide fire button
+            AudioSys.playShoot();
+
+            const lookDir = Math.cos(w.angle) > 0 ? 1 : -1;
+            let px = w.x;
+            let py = w.y - 20;
+
+            // Power logic: 0 power = 0 move, 100 power = max move
+            let projectileForce = (power / 100) * 12;
+            projectiles.push(new Projectile(px, py, w.aimAngle, projectileForce));
+        }
+
+        // --- MATH UI LOGIC ---
+        function openMathModal() {
+            const modal = document.getElementById('math-modal');
+            const qObj = generateQuestion();
+            document.getElementById('question-text').innerText = qObj.q;
+            const grid = document.getElementById('answers-grid');
+            grid.innerHTML = '';
+            modal.classList.remove('hidden');
+
+            qObj.options.forEach(opt => {
+                let btn = document.createElement('button');
+                btn.className = "p-4 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-lg border border-gray-600 shadow-md text-lg transition-transform active:scale-95";
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    modal.classList.add('hidden');
+                    if (opt === qObj.a) {
+                        AudioSys.playCorrect();
+                        document.getElementById('btn-quiz').classList.add('hidden');
+                        document.getElementById('btn-fire').classList.remove('hidden');
+                        showComment('start'); // Positive feedback
+                    } else {
+                        AudioSys.playWrong();
+                        showComment('miss');
+                        endTurnDelayed(1000);
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        // --- GAME FLOW HELPERS ---
+        function startTurn() {
+            turnTimer = 45;
+            document.getElementById('turn-timer').innerText = turnTimer;
+            document.getElementById('turn-timer').classList.remove('timer-warning');
+
+            if (turnInterval) clearInterval(turnInterval);
+            turnInterval = setInterval(() => {
+                turnTimer--;
+                document.getElementById('turn-timer').innerText = turnTimer;
+                if (turnTimer <= 10) {
+                    document.getElementById('turn-timer').classList.add('timer-warning');
+                    AudioSys.playTick();
+                }
+                if (turnTimer <= 0) {
+                    clearInterval(turnInterval);
+                    endTurnDelayed(500);
+                }
+            }, 1000);
+        }
+
+        function updateHUD() {
+            const container = document.getElementById('health-bars-container');
+            container.innerHTML = '';
+            teams.forEach((t, idx) => {
+                let alive = t.worms.filter(w => !w.dead).length;
+                if (alive === 0) return;
+
+                let div = document.createElement('div');
+                div.className = `${teamConfigs[idx].bg} px-3 py-2 rounded-lg border-2 border-white/30 backdrop-blur-sm`;
+                div.innerHTML = `
+                    <div class="text-white font-bold text-xs">${t.name}</div>
+                    <div class="text-white text-lg font-bold">${t.worms[0].health}%</div>
+                `;
+                if (idx === currentPlayer) {
+                    div.style.boxShadow = '0 0 15px rgba(255,255,255,0.8)';
+                }
+                container.appendChild(div);
+            });
+        }
+
+        function updateWindUI() {
+            const windVal = Math.abs(Math.round(wind));
+            document.getElementById('wind-text').innerText = windVal;
+            const icon = document.getElementById('wind-icon');
+            if (wind > 0) {
+                icon.className = "fas fa-arrow-right text-blue-400";
+            } else if (wind < 0) {
+                icon.className = "fas fa-arrow-left text-red-400";
+            } else {
+                icon.className = "fas fa-minus";
+            }
+        }
+
+        function endTurnDelayed(delay = 2000) {
+            if (turnChangePending) return;
+            turnChangePending = true;
+
+            if (turnInterval) clearInterval(turnInterval);
+
+            setTimeout(() => {
+                turnChangePending = false;
+                currentPlayer = (currentPlayer + 1) % totalPlayers;
+
+                // Skip dead teams
+                let attempts = 0;
+                while (teams[currentPlayer].worms[0].dead && attempts < totalPlayers) {
+                    currentPlayer = (currentPlayer + 1) % totalPlayers;
+                    attempts++;
+                }
+
+                if (attempts >= totalPlayers) {
+                    checkGameOver();
+                    return;
+                }
+
+                gameState = "PLAYING";
+                document.getElementById('btn-quiz').classList.remove('hidden');
+                document.getElementById('btn-fire').classList.add('hidden');
+                power = 0;
+                isPowering = false;
+                document.getElementById('power-container').classList.add('hidden');
+                updateHUD();
+                // WIND UPDATE: Change wind every turn!
+                wind = (Math.random() - 0.5) * 60;
+                updateWindUI();
+                startTurn();
+            }, delay);
+        }
+
+        function checkDeaths() {
+            teams.forEach(t => {
+                t.worms.forEach(w => {
+                    if (w.health <= 0 && !w.dead) {
+                        w.dead = true;
+                        w.health = 0;
+                    }
+                });
+            });
+        }
+
+        function checkGameOver() {
+            let aliveTeams = teams.filter(t => t.worms.some(w => !w.dead));
+            if (aliveTeams.length === 1) {
+                gameState = "GAME_OVER";
+                if (turnInterval) clearInterval(turnInterval);
+                document.getElementById('message-text').innerText = `${aliveTeams[0].name} KAZANDI!`;
+                document.getElementById('message-area').classList.remove('hidden');
+                document.getElementById('game-over-controls').classList.remove('hidden');
+                showComment('win');
+            } else if (aliveTeams.length === 0) {
+                gameState = "GAME_OVER";
+                if (turnInterval) clearInterval(turnInterval);
+                document.getElementById('message-text').innerText = 'BERABERE!';
+                document.getElementById('message-area').classList.remove('hidden');
+                document.getElementById('game-over-controls').classList.remove('hidden');
+                showComment('draw');
+            }
+        }
+
+        function createSplash(x, y) {
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x, y: waterLevel,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: -Math.random() * 6,
+                    life: 1,
+                    color: '#38bdf8',
+                    size: 3 + Math.random() * 3
+                });
+            }
+        }
+
+        // --- GAME FLOW FUNCTIONS ---
+        window.startGame = function (numPlayers) {
+            totalPlayers = numPlayers;
+            teams = [];
+            projectiles = [];
+            explosions = [];
+            particles = [];
+            floatTexts = [];
+            currentPlayer = 0;
+
+            // Reset used questions for new game
+            usedQuestions.clear();
+
+            // Generate new map
+            generateMap();
+
+            // Create teams with distributed spawn positions
+            for (let i = 0; i < totalPlayers; i++) {
+                let spawnX = getSafeSpawnX(i, totalPlayers);
+                let worm = new Worm(spawnX, i);
+                teams.push({
+                    name: teamConfigs[i].name,
+                    color: teamConfigs[i].color,
+                    bodyColor: teamConfigs[i].body,
+                    outline: teamConfigs[i].outline,
+                    worms: [worm]
+                });
+            }
+
+            // Start game
+            gameState = "PLAYING";
+            // Random initial wind
+            wind = (Math.random() - 0.5) * 60;
+            updateWindUI();
+            updateHUD();
+            startTurn();
+            showComment('start');
+        };
+
+        // goToMenu is already defined above with correct menu-screen reference
+
+        // Start Init
+        init();
+
+    </script>
+</body>
+
+</html>
