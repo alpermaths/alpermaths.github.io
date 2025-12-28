@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sayısalcı Madenci - Sınıf & Konu Seçmeli</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <div id="game-wrapper">
+        <div id="game-container">
+            <canvas id="gameCanvas" width="1366" height="768"></canvas>
+
+            <!-- UI Katmanı -->
+            <div id="ui-layer">
+                <div class="stat-group">
+                    <span class="stat-label">TOPLANAN</span>
+                    <div class="stat-box"><span id="score">0</span> ₺</div>
+                    <button id="menu-btn" onclick="goToMenu()">MENÜ</button>
+                </div>
+                <!-- Seçili Konu Bilgisi -->
+                <div class="stat-group" style="align-items: flex-end;">
+                    <span class="stat-label" id="current-info-label">6. SINIF</span>
+                    <div style="font-size: 24px; color: #FFD700; font-weight: bold;" id="current-topic-label">Genel
+                    </div>
+                </div>
+            </div>
+
+            <div id="timer-container">
+                <div id="timer-badge">60</div>
+            </div>
+
+            <div id="feedback"></div>
+
+            <!-- Soru Ekranı -->
+            <div id="math-modal">
+                <div id="question-timer-text">30 sn</div>
+                <div id="question-timer-bar">
+                    <div id="question-timer-fill"></div>
+                </div>
+                <h3 style="margin-top:0; color:#d35400; font-size: 32px;">SORUYU ÇÖZ!</h3>
+                <div id="math-question">...</div>
+                <div id="options-container"></div>
+            </div>
+
+            <!-- 1. Giriş Ekranı (İsim) -->
+            <div id="start-screen" class="screen">
+                <div class="school-name">MACİDE GAZİOĞLU KÜKÜRTLÜ ORTAOKULU</div>
+                <h1>SAYISALCI MADENCİ</h1>
+                <input type="text" id="player-name-input" placeholder="İSMİNİZİ GİRİN" maxlength="15">
+                <button class="btn-primary btn-start" onclick="goToClasses()">BAŞLA</button>
+
+                <div id="leaderboard">
+                    <div style="text-align:center; margin-bottom:15px; color:#FFD700; font-size: 28px;">EN İYİ AVCI
+                        LİSTESİ</div>
+                    <div id="scores-list"></div>
+                </div>
+                <div class="author-name">ALPER TEYMUR</div>
+            </div>
+
+            <!-- 2. Sınıf Seçme Ekranı -->
+            <div id="class-screen" class="screen" style="display: none;">
+                <h2>SINIFINI SEÇ</h2>
+                <div class="grid-container" id="class-grid">
+                    <!-- JS ile doldurulacak -->
+                </div>
+                <button class="btn-primary btn-back" onclick="showScreen('start-screen')">GERİ DÖN</button>
+            </div>
+
+            <!-- 3. Konu Seçme Ekranı -->
+            <div id="topic-screen" class="screen" style="display: none;">
+                <h2 id="topic-title">KONU SEÇ</h2>
+                <div class="grid-container topics" id="topic-grid">
+                    <!-- JS ile doldurulacak -->
+                </div>
+                <button class="btn-primary btn-back" onclick="showScreen('class-screen')">GERİ DÖN</button>
+            </div>
+
+            <!-- 4. Zorluk Seçme Ekranı -->
+            <div id="difficulty-screen" class="screen" style="display: none;">
+                <h2>ZORLUK SEVİYESİ</h2>
+                <div class="difficulty-container">
+                    <button class="btn-primary btn-easy" onclick="initAudioAndStart(1)">KOLAY</button>
+                    <button class="btn-primary btn-medium" onclick="initAudioAndStart(2)">ORTA</button>
+                    <button class="btn-primary btn-hard" onclick="initAudioAndStart(3)">ZOR</button>
+                </div>
+                <button class="btn-primary btn-back" onclick="showScreen('topic-screen')">GERİ DÖN</button>
+            </div>
+
+            <!-- Oyun Sonu Ekranı -->
+            <div id="game-over-screen" class="screen" style="display: none;">
+                <h1 style="color: #FFD700;">OYUN BİTTİ!</h1>
+                <p style="font-size: 40px; color: white; margin-bottom: 20px;">Süre Doldu</p>
+                <p style="font-size: 60px; color: #2ecc71; margin-bottom: 50px;">Toplam Kazanç: <span
+                        id="final-score">0</span> ₺</p>
+                <button class="btn-primary btn-menu" onclick="resetGame()">ANA MENÜ</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game.js"></script>
+</body>
+
+</html>
