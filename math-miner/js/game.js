@@ -111,7 +111,13 @@ function resizeGame() {
     const container = document.getElementById('game-container');
     const targetW = 1366, targetH = 768;
     const winW = window.innerWidth, winH = window.innerHeight;
-    const scale = Math.min(winW / targetW, winH / targetH) * 0.98;
+
+    // Mobil cihazlarda (768px altı) tam ekran kaplasın
+    // Akıllı tahtalarda ve büyük ekranlarda biraz kenar boşluğu bırak
+    const isMobile = winW <= 768;
+    const scaleFactor = isMobile ? 1.0 : 0.98;
+
+    const scale = Math.min(winW / targetW, winH / targetH) * scaleFactor;
     container.style.transform = `scale(${scale})`;
 }
 window.addEventListener('resize', resizeGame);

@@ -42,6 +42,7 @@ body {
     border: 10px solid #5D4037;
     border-radius: 10px;
     transform-origin: center center;
+    flex-shrink: 0;
 }
 
 canvas {
@@ -399,4 +400,238 @@ h2 {
     text-shadow: 5px 5px 0 #000;
     z-index: 150;
     white-space: nowrap;
+}
+
+/* === MOBİL UYUMLULUK === */
+/* Container boyutları JavaScript resizeGame() ile yönetiliyor */
+/* Burada sadece UI elementleri için mobil stiller var */
+
+@media screen and (max-width: 768px) {
+
+    /* UI Layer - Mobil */
+    #ui-layer {
+        padding: 10px 15px;
+        height: auto;
+    }
+
+    .stat-group {
+        padding: 8px 12px;
+        border-radius: 10px;
+    }
+
+    .stat-box {
+        font-size: 24px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        margin-bottom: 2px;
+    }
+
+    #menu-btn {
+        padding: 8px 15px;
+        font-size: 14px;
+        margin-top: 8px;
+    }
+
+    /* Timer - Mobil */
+    #timer-container {
+        top: 10px;
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    #timer-badge {
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+        border-width: 3px;
+    }
+
+    /* Soru Modal - Mobil */
+    #math-modal {
+        width: 90vw;
+        padding: 20px;
+        border-width: 5px;
+        border-radius: 20px;
+    }
+
+    #math-modal h3 {
+        font-size: 20px !important;
+    }
+
+    #math-question {
+        font-size: 24px;
+        padding: 15px;
+        margin: 10px 0 20px 0;
+        min-height: 50px;
+    }
+
+    #question-timer-text {
+        font-size: 20px;
+        top: -30px;
+    }
+
+    #question-timer-bar {
+        height: 12px;
+        margin-bottom: 15px;
+    }
+
+    #options-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .option-btn {
+        padding: 15px;
+        font-size: 20px;
+        border-radius: 10px;
+    }
+
+    /* Ekranlar - Mobil */
+    h1 {
+        font-size: 40px;
+        margin: 5px 0 15px 0;
+    }
+
+    h2 {
+        font-size: 28px;
+        margin-bottom: 15px;
+    }
+
+    .school-name {
+        font-size: 14px;
+        letter-spacing: 1px;
+    }
+
+    .author-name {
+        font-size: 16px;
+        margin-top: 20px;
+    }
+
+    #player-name-input {
+        padding: 12px;
+        font-size: 20px;
+        width: 80%;
+        max-width: 280px;
+        margin-bottom: 15px;
+    }
+
+    .grid-container {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        max-width: 95vw;
+        padding: 0 10px;
+    }
+
+    .grid-container.topics {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .btn-primary {
+        padding: 15px 20px;
+        font-size: 16px;
+        min-width: auto;
+        border-radius: 12px;
+    }
+
+    .btn-start {
+        font-size: 22px;
+        padding: 15px 40px;
+    }
+
+    .btn-back {
+        font-size: 14px;
+        padding: 10px 20px;
+        margin-top: 15px;
+    }
+
+    .difficulty-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .btn-easy,
+    .btn-medium,
+    .btn-hard {
+        width: 200px;
+    }
+
+    #leaderboard {
+        width: 90vw;
+        max-width: 350px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+
+    #leaderboard>div:first-child {
+        font-size: 18px !important;
+    }
+
+    .score-row {
+        font-size: 16px;
+        padding: 5px 0;
+    }
+
+    #feedback {
+        font-size: 40px;
+    }
+
+    /* Game Over - Mobil */
+    #game-over-screen h1 {
+        font-size: 36px;
+    }
+
+    #game-over-screen p {
+        font-size: 24px !important;
+        margin-bottom: 15px !important;
+    }
+
+    #game-over-screen p:last-of-type {
+        font-size: 32px !important;
+    }
+
+    /* Seçili Konu Bilgisi - Mobil */
+    #current-info-label {
+        font-size: 10px;
+    }
+
+    #current-topic-label {
+        font-size: 14px !important;
+    }
+}
+
+/* Çok küçük ekranlar için */
+@media screen and (max-width: 400px) {
+    h1 {
+        font-size: 32px;
+    }
+
+    h2 {
+        font-size: 22px;
+    }
+
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-container.topics {
+        grid-template-columns: 1fr;
+    }
+
+    .btn-primary {
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+
+    #math-question {
+        font-size: 20px;
+    }
+
+    .option-btn {
+        font-size: 18px;
+        padding: 12px;
+    }
 }
