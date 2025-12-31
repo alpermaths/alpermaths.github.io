@@ -1,15 +1,17 @@
-/* ===== CSS Variables ===== */
+/* ===== CSS Variables - Canlı Renkler ===== */
 :root {
-    --bg-primary: #0a0a1a;
-    --bg-secondary: #12122a;
+    --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    --bg-secondary: #1a1a2e;
     --text-primary: #ffffff;
-    --text-secondary: #a0a0c0;
-    --accent-primary: #6366f1;
-    --accent-secondary: #8b5cf6;
-    --accent-tertiary: #ec4899;
-    --card-bg: rgba(255, 255, 255, 0.05);
-    --card-border: rgba(255, 255, 255, 0.1);
-    --glow-color: rgba(99, 102, 241, 0.4);
+    --text-secondary: #b8c5d6;
+    --accent-primary: #00d9ff;
+    --accent-secondary: #ff6b6b;
+    --accent-tertiary: #feca57;
+    --accent-green: #1dd1a1;
+    --accent-purple: #a55eea;
+    --card-bg: rgba(255, 255, 255, 0.08);
+    --card-border: rgba(255, 255, 255, 0.15);
+    --glow-color: rgba(0, 217, 255, 0.4);
 }
 
 /* ===== Reset & Base ===== */
@@ -27,13 +29,14 @@ html {
 body {
     font-family: 'Outfit', sans-serif;
     background: var(--bg-primary);
+    background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
 }
 
-/* ===== Background Effects ===== */
+/* ===== Animated Background with Math Symbols ===== */
 .bg-effects {
     position: fixed;
     top: 0;
@@ -45,40 +48,65 @@ body {
     overflow: hidden;
 }
 
+/* Floating Math Symbols */
+.bg-effects::before {
+    content: "∑ π × ÷ √ ∞ = + − ∫ Δ θ α β ² ³ % ± ≤ ≥";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 300%;
+    height: 300%;
+    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.03);
+    word-spacing: 80px;
+    line-height: 4;
+    animation: floatSymbols 120s linear infinite;
+    transform-origin: center;
+}
+
+@keyframes floatSymbols {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-33%, -33%) rotate(5deg);
+    }
+}
+
 .gradient-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.5;
-    animation: float 20s ease-in-out infinite;
+    filter: blur(100px);
+    opacity: 0.6;
+    animation: float 15s ease-in-out infinite;
 }
 
 .orb-1 {
-    width: 600px;
-    height: 600px;
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-    top: -200px;
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #00d9ff, #0099ff);
+    top: -150px;
     right: -100px;
     animation-delay: 0s;
 }
 
 .orb-2 {
-    width: 500px;
-    height: 500px;
-    background: linear-gradient(135deg, var(--accent-tertiary), var(--accent-primary));
-    bottom: -150px;
+    width: 450px;
+    height: 450px;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    bottom: -100px;
     left: -100px;
-    animation-delay: -7s;
+    animation-delay: -5s;
 }
 
 .orb-3 {
-    width: 400px;
-    height: 400px;
-    background: linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary));
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation-delay: -14s;
+    width: 350px;
+    height: 350px;
+    background: linear-gradient(135deg, #feca57, #1dd1a1);
+    top: 40%;
+    left: 30%;
+    animation-delay: -10s;
 }
 
 @keyframes float {
@@ -88,16 +116,12 @@ body {
         transform: translate(0, 0) scale(1);
     }
 
-    25% {
-        transform: translate(30px, -30px) scale(1.05);
+    33% {
+        transform: translate(40px, -40px) scale(1.1);
     }
 
-    50% {
-        transform: translate(-20px, 20px) scale(0.95);
-    }
-
-    75% {
-        transform: translate(-30px, -20px) scale(1.02);
+    66% {
+        transform: translate(-30px, 30px) scale(0.9);
     }
 }
 
@@ -136,10 +160,26 @@ body {
 .logo-text {
     font-size: 2.5rem;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+    background: linear-gradient(135deg, #00d9ff, #feca57, #ff6b6b);
+    background-size: 200% 200%;
+    animation: gradientFlow 3s ease infinite;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+@keyframes gradientFlow {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .tagline {

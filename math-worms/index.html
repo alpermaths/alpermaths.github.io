@@ -1,0 +1,2628 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Matematik Savaşları: Arena v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            background-color: #1a1a1a;
+            user-select: none;
+        }
+
+        .game-font {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+
+        .btn-game {
+            transition: transform 0.05s, filter 0.1s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-game:active {
+            transform: scale(0.92);
+            filter: brightness(0.9);
+        }
+
+        .glass-panel {
+            background: rgba(40, 30, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid #8b4513;
+            border-radius: 1rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            color: #e2e8f0;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .btn-fire-ready {
+            animation: pulse-red 1.5s infinite;
+        }
+
+        /* Flashing timer */
+        .timer-warning {
+            color: #ef4444 !important;
+            animation: pulse-text 0.5s infinite alternate;
+        }
+
+        @keyframes pulse-text {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.2);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900">
+
+    <!-- SELECTION MENU SCREEN -->
+    <div id="menu-screen"
+        class="fixed inset-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 z-50 flex flex-col items-center justify-center p-4">
+
+        <!-- View Mode Selection (NEW FIRST SCREEN) -->
+        <div id="view-selection" class="text-center relative w-full max-w-4xl mx-auto">
+            <a href="/"
+                class="absolute top-0 left-0 bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-lg font-bold shadow-lg transition-colors flex items-center gap-2 decoration-none z-50"
+                style="text-decoration: none;">
+                <i class="fas fa-home"></i> ANASAYFA
+            </a>
+            <h1 class="game-font text-4xl md:text-6xl text-yellow-400 mb-4 drop-shadow-lg mt-12">MATEMATİK SOLUCANLARI
+            </h1>
+            <p class="text-gray-300 mb-8">Görünüm Modu Seçin</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                <!-- Klasik 2D -->
+                <a href="classic.html"
+                    class="group bg-gradient-to-br from-amber-600 to-orange-700 hover:from-amber-500 hover:to-orange-600 text-white p-6 rounded-2xl border-b-4 border-amber-900 transition-all hover:scale-105 shadow-xl block"
+                    style="text-decoration: none;">
+                    <div class="text-5xl mb-4">📺</div>
+                    <h3 class="text-2xl font-bold mb-2">KLASİK</h3>
+                    <p class="text-amber-200 text-sm">2D Görünüm • Tek Ekran</p>
+                    <p class="text-amber-300 text-xs mt-2">Özdeşlikler Cephesi</p>
+                </a>
+
+                <!-- 3D Görünüm -->
+                <button onclick="show3DMenu()"
+                    class="group bg-gradient-to-br from-purple-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white p-6 rounded-2xl border-b-4 border-purple-900 transition-all hover:scale-105 shadow-xl">
+                    <div class="text-5xl mb-4">🎮</div>
+                    <h3 class="text-2xl font-bold mb-2">3D GÖRÜNÜM</h3>
+                    <p class="text-purple-200 text-sm">Geniş Harita • Kamera Kaydırma</p>
+                    <p class="text-purple-300 text-xs mt-2">Sınıf ve Konu Seçimi</p>
+                </button>
+            </div>
+
+            <div class="mt-8 text-center">
+                <p class="text-white text-sm font-bold">Tasarımcı: ALPER TEYMUR</p>
+                <p class="text-yellow-500 text-xs mt-1">MACİDE GAZİOĞLU KÜKÜRTLÜ ORTAOKULU</p>
+            </div>
+        </div>
+
+        <!-- Grade Selection (Now hidden by default) -->
+        <div id="grade-selection" class="text-center relative w-full max-w-4xl mx-auto hidden">
+            <button onclick="backToViewSelection()"
+                class="absolute top-0 left-0 bg-gray-600 hover:bg-gray-500 text-white p-3 rounded-lg font-bold shadow-lg transition-colors flex items-center gap-2 z-50">
+                <i class="fas fa-arrow-left"></i> GERİ
+            </button>
+            <h1 class="game-font text-4xl md:text-6xl text-yellow-400 mb-8 drop-shadow-lg mt-12">MATEMATİK SAVAŞLARI
+            </h1>
+            <p class="text-purple-300 mb-2">🎮 3D GÖRÜNÜM</p>
+            <h2 class="text-xl md:text-2xl text-white mb-6">Sınıf Seçin</h2>
+            <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                <button onclick="selectGrade(5)"
+                    class="bg-green-600 hover:bg-green-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-green-800 transition-all hover:scale-105">5.
+                    Sınıf</button>
+                <button onclick="selectGrade(6)"
+                    class="bg-blue-600 hover:bg-blue-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-blue-800 transition-all hover:scale-105">6.
+                    Sınıf</button>
+                <button onclick="selectGrade(7)"
+                    class="bg-purple-600 hover:bg-purple-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-purple-800 transition-all hover:scale-105">7.
+                    Sınıf</button>
+                <button onclick="selectGrade(8)"
+                    class="bg-red-600 hover:bg-red-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-red-800 transition-all hover:scale-105">8.
+                    Sınıf</button>
+            </div>
+        </div>
+
+        <!-- Topic Selection -->
+        <div id="topic-selection" class="text-center hidden">
+            <h2 class="text-xl md:text-2xl text-white mb-2"><span id="selected-grade-text"></span></h2>
+            <h3 class="text-lg text-gray-300 mb-6">Konu Seçin</h3>
+            <div id="topic-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-lg mx-auto mb-6"></div>
+            <button onclick="backToGrade()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i>
+                Geri</button>
+        </div>
+
+        <!-- Player Selection -->
+        <div id="player-selection" class="text-center hidden">
+            <h2 class="text-xl md:text-2xl text-white mb-2"><span id="selected-topic-text"></span></h2>
+            <h3 class="text-lg text-gray-300 mb-6">Oyuncu Sayısı</h3>
+            <div class="flex gap-4 justify-center mb-6">
+                <button onclick="startGameWithPlayers(2)"
+                    class="bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-xl font-bold py-4 px-8 rounded-xl border-b-4 border-yellow-700 transition-all hover:scale-105">2
+                    Kişi</button>
+                <button onclick="startGameWithPlayers(3)"
+                    class="bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-xl font-bold py-4 px-8 rounded-xl border-b-4 border-yellow-700 transition-all hover:scale-105">3
+                    Kişi</button>
+                <button onclick="startGameWithPlayers(4)"
+                    class="bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-xl font-bold py-4 px-8 rounded-xl border-b-4 border-yellow-700 transition-all hover:scale-105">4
+                    Kişi</button>
+            </div>
+            <button onclick="backToTopic()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i>
+                Geri</button>
+        </div>
+    </div>
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+
+    <!-- UI Overlay -->
+    <div id="ui-layer" class="p-2 select-none">
+
+        <!-- Top HUD -->
+        <div class="flex flex-col w-full pointer-events-none z-10 gap-2">
+            <div class="flex justify-between items-center w-full px-2">
+                <div class="flex gap-2 pointer-events-auto">
+                    <a href="/"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-lg border border-indigo-400 text-xs font-bold shadow-lg transition-colors flex items-center gap-1 decoration-none"
+                        style="text-decoration: none;">
+                        <i class="fas fa-home"></i> ANASAYFA
+                    </a>
+                    <button onclick="goToMenu()"
+                        class="interactive bg-gray-700/80 hover:bg-red-600 text-white p-2 rounded-lg border border-gray-500 text-xs font-bold shadow-lg transition-colors">
+                        <i class="fas fa-home"></i> MENÜ
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <div id="fps-counter" class="text-[10px] text-gray-400 font-mono hidden">60 FPS</div>
+                    <div
+                        class="bg-gray-800/90 text-white px-3 py-1 rounded-full border border-gray-600 font-bold text-lg shadow-lg">
+                        <span id="turn-timer" class="text-yellow-400 transition-all duration-200">45</span>
+                    </div>
+                    <div
+                        class="bg-white/20 backdrop-blur px-3 py-1 rounded-lg flex items-center gap-2 text-white text-xs font-bold border border-white/30">
+                        <i class="fas fa-wind text-gray-300"></i>
+                        <i id="wind-icon" class="fas fa-arrow-right"></i>
+                        <span id="wind-text">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="health-bars-container" class="flex justify-around items-start w-full px-2 flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Commentary Box -->
+        <div id="commentary"
+            class="absolute top-32 left-1/2 transform -translate-x-1/2 w-full max-w-md pointer-events-none transition-opacity duration-500 opacity-0 z-0">
+            <div
+                class="bg-black/60 backdrop-blur-md text-white p-3 rounded-xl border border-gray-500/50 text-center shadow-lg mx-4">
+                <div
+                    class="flex items-center justify-center gap-2 mb-1 text-yellow-300 text-xs font-bold uppercase tracking-widest">
+                    <i class="fas fa-volume-up"></i> SPİKER
+                </div>
+                <p id="comment-text" class="text-sm md:text-base font-medium italic text-gray-100">Maç başlıyor!</p>
+            </div>
+        </div>
+
+        <!-- Power Meter -->
+        <div id="power-container"
+            class="absolute top-24 left-1/2 transform -translate-x-1/2 w-64 h-8 bg-gray-900 border-2 border-white rounded-lg overflow-hidden hidden shadow-[0_0_15px_rgba(255,255,0,0.5)] z-20">
+            <div id="power-fill" class="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-600 w-0"></div>
+            <span
+                class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-md">GÜÇ</span>
+        </div>
+
+        <!-- Turn Message -->
+        <div id="message-area"
+            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none hidden z-20 w-full">
+            <h2 id="message-text"
+                class="text-5xl md:text-7xl game-font text-white drop-shadow-[0_4px_0_#000] stroke-black"
+                style="-webkit-text-stroke: 2px black;">TUR</h2>
+            <div id="game-over-controls" class="mt-8 pointer-events-auto hidden">
+                <button onclick="goToMenu()"
+                    class="interactive px-8 py-3 bg-green-600 hover:bg-green-500 text-white text-xl font-bold rounded-xl shadow-lg border-b-4 border-green-800">
+                    ANA MENÜYE DÖN
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="mt-auto w-full flex justify-between items-end pb-4 interactive z-10">
+            <!-- Movement -->
+            <div class="flex gap-3 items-end">
+                <div class="flex gap-1 bg-gray-800/50 p-2 rounded-2xl backdrop-blur-sm border border-white/10">
+                    <button id="btn-left"
+                        class="btn-game w-14 h-14 bg-gray-200 rounded-lg shadow-lg border-b-4 border-gray-400 text-gray-700 text-xl flex items-center justify-center">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button id="btn-right"
+                        class="btn-game w-14 h-14 bg-gray-200 rounded-lg shadow-lg border-b-4 border-gray-400 text-gray-700 text-xl flex items-center justify-center">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <!-- Jump Button -->
+                <button id="btn-jump"
+                    class="btn-game w-14 h-14 bg-yellow-400 rounded-full shadow-lg border-b-4 border-yellow-600 text-yellow-900 text-xl mb-2 flex items-center justify-center">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+            </div>
+
+            <!-- Action Area -->
+            <div class="flex gap-4 items-end">
+                <div class="flex flex-col gap-1 bg-gray-800/50 p-2 rounded-2xl backdrop-blur-sm border border-white/10">
+                    <button id="btn-aim-up"
+                        class="btn-game w-12 h-12 bg-gray-300 rounded-lg border-b-4 border-gray-500 text-gray-700 shadow">
+                        <i class="fas fa-angle-up"></i>
+                    </button>
+                    <button id="btn-aim-down"
+                        class="btn-game w-12 h-12 bg-gray-300 rounded-lg border-b-4 border-gray-500 text-gray-700 shadow">
+                        <i class="fas fa-angle-down"></i>
+                    </button>
+                </div>
+
+                <button id="btn-quiz"
+                    class="btn-game w-20 h-20 bg-blue-500 rounded-2xl border-b-8 border-blue-700 text-white text-3xl shadow-xl flex items-center justify-center animate-bounce">
+                    <i class="fas fa-lock-open"></i>
+                </button>
+                <button id="btn-fire"
+                    class="hidden btn-game w-24 h-24 bg-red-600 rounded-full border-b-8 border-red-800 text-white text-4xl shadow-[0_0_20px_rgba(255,0,0,0.6)] flex items-center justify-center btn-fire-ready">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Math Modal -->
+    <div id="math-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden p-4">
+        <div class="glass-panel w-full max-w-2xl p-6 relative overflow-hidden flex flex-col items-center">
+            <h3 class="text-3xl text-yellow-400 mb-2 game-font text-center drop-shadow-md">KİLİDİ AÇ!</h3>
+            <p class="text-gray-300 text-center mb-4 text-sm">Doğru cevap verip silahını şarj et.</p>
+            <div
+                class="bg-gray-900/50 p-6 rounded-xl border border-yellow-700 mb-6 w-full relative min-h-[100px] flex items-center justify-center">
+                <span id="question-text"
+                    class="text-xl md:text-2xl font-bold text-white font-mono tracking-wide block text-center"></span>
+            </div>
+            <div id="answers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full"></div>
+        </div>
+    </div>
+
+    <!-- Old start-screen removed - now using menu-screen with grade/topic selection -->
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- AUDIO MANAGER ---
+        const AudioSys = {
+            ctx: null,
+            init: function () {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+            },
+            playTone: function (freq, type, duration, vol = 0.1) {
+                if (!this.ctx) this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + duration);
+            },
+            playJump: function () { this.playTone(280, "triangle", 0.15, 0.15); setTimeout(() => this.playTone(350, "triangle", 0.1, 0.1), 50); },
+            playShoot: function () { this.playTone(150, "sawtooth", 0.1, 0.2); this.playTone(400, "square", 0.2, 0.15); },
+            playExplosion: function () { this.playTone(60, "sawtooth", 0.4, 0.4); setTimeout(() => this.playTone(40, "square", 0.3, 0.3), 100); },
+            playSplash: function () { this.playTone(200, "sine", 0.3, 0.15); this.playTone(120, "sine", 0.4, 0.2); },
+            playCharge: function (val) { this.playTone(150 + val * 3, "sine", 0.06, 0.08); },
+            playTick: function () { this.playTone(600, "square", 0.03, 0.1); },
+            playCorrect: function () { this.playTone(523, "sine", 0.15, 0.2); setTimeout(() => this.playTone(659, "sine", 0.2, 0.2), 100); },
+            playWrong: function () { this.playTone(200, "sawtooth", 0.3, 0.2); }
+        };
+
+        // --- CONFIG ---
+        let width, height;
+
+        let gameState = "MENU";
+        let currentPlayer = 0;
+        let totalPlayers = 2;
+        let heightmap = []; // Legacy for spawn only
+        let terrainCanvas = document.createElement('canvas');
+        let terrainCtx = terrainCanvas.getContext('2d');
+        let terrainData = null; // Fast bitmask for collisions
+        let waterLevel = 0;
+        let wind = 0;
+        let projectiles = [];
+        let explosions = [];
+        let particles = [];
+        let floatTexts = [];
+        let lastTime = 0;
+        let fps = 0;
+        let turnTimer = 45;
+        let turnInterval;
+        let power = 0;
+        let powerDir = 0.5;
+        let isPowering = false;
+
+        // Touch control states for simultaneous input
+        let moveDir = 0;
+        let moveInterval = null;
+        let turnChangePending = false;
+
+        // CAMERA SYSTEM for large scrollable map
+        let mapWidth = 2400;  // Larger than screen
+        let mapHeight = 1200; // Larger than screen
+        let cameraX = 0;
+        let cameraY = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let manualPanTimer = 0; // When > 0, disable auto-follow
+
+        // MENU STATE
+        let selectedGrade = null;
+        let selectedTopic = null;
+
+        // TOPICS PER GRADE
+        const gradeTopics = {
+            5: ["Doğal Sayılar", "Kesirler", "Geometrik Şekiller", "Çevre ve Alan"],
+            6: ["Tam Sayılar", "Kesirler", "Oran-Orantı", "Denklem", "Açılar", "Hacim"],
+            7: ["Rasyonel Sayılar", "Cebirsel İfadeler", "Denklemler", "Oran ve Orantı", "Yüzdeler", "Dörtgenler", "Çember ve Daire"],
+            8: ["Üslü İfadeler", "Kareköklü İfadeler", "Özdeşlikler", "Çarpanlara Ayırma", "Olasılık", "Denklemler", "Üçgenler", "Eşitsizlikler"]
+        };
+
+        // VIEW SELECTION FUNCTIONS
+        function show3DMenu() {
+            document.getElementById('view-selection').classList.add('hidden');
+            document.getElementById('grade-selection').classList.remove('hidden');
+        }
+
+        function backToViewSelection() {
+            document.getElementById('grade-selection').classList.add('hidden');
+            document.getElementById('view-selection').classList.remove('hidden');
+        }
+
+        // MENU FUNCTIONS
+        function selectGrade(grade) {
+            selectedGrade = grade;
+            document.getElementById('grade-selection').classList.add('hidden');
+            document.getElementById('topic-selection').classList.remove('hidden');
+            document.getElementById('selected-grade-text').innerText = grade + '. Sınıf';
+
+            const container = document.getElementById('topic-buttons');
+            container.innerHTML = '';
+            gradeTopics[grade].forEach(topic => {
+                const btn = document.createElement('button');
+                btn.className = 'bg-teal-600 hover:bg-teal-500 text-white text-lg font-bold py-3 px-6 rounded-xl border-b-4 border-teal-800 transition-all hover:scale-105';
+                btn.innerText = topic;
+                btn.onclick = () => selectTopic(topic);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectTopic(topic) {
+            selectedTopic = topic;
+            document.getElementById('topic-selection').classList.add('hidden');
+            document.getElementById('player-selection').classList.remove('hidden');
+            document.getElementById('selected-topic-text').innerText = selectedGrade + '. Sınıf - ' + topic;
+        }
+
+        function backToGrade() {
+            document.getElementById('topic-selection').classList.add('hidden');
+            document.getElementById('grade-selection').classList.remove('hidden');
+        }
+
+        function backToTopic() {
+            document.getElementById('player-selection').classList.add('hidden');
+            document.getElementById('topic-selection').classList.remove('hidden');
+        }
+
+        function startGameWithPlayers(count) {
+            totalPlayers = count;
+            document.getElementById('menu-screen').classList.add('hidden');
+            startGame(count);
+        }
+
+        // Team Configs
+        const teamConfigs = [
+            { name: "MAVİ", color: "#60a5fa", body: "#3b82f6", outline: "#1e3a8a", bg: "bg-blue-600" },
+            { name: "KIRMIZI", color: "#f87171", body: "#ef4444", outline: "#7f1d1d", bg: "bg-red-600" },
+            { name: "YEŞİL", color: "#4ade80", body: "#22c55e", outline: "#14532d", bg: "bg-green-600" },
+            { name: "MOR", color: "#c084fc", body: "#a855f7", outline: "#581c87", bg: "bg-purple-600" }
+        ];
+
+        let teams = [];
+
+        // --- COMMENTS ---
+        const comments = {
+            start: ["Hazır mısınız?", "Savaş başlasın!", "Mağaraya hoşgeldiniz!"],
+            hit: ["Tam isabet!", "Bum!", "Fena vurdu!", "Hesap tuttu!"],
+            miss: ["Karavana!", "Rüzgarı unuttun!", "Karanlıkta göremedi!", "Iskaladı!"],
+            water: ["Boğuldu!", "Balık yemi oldu!", "Yüzme biliyor mu?"],
+            win: ["Şampiyon belli!", "Zafer!", "Oyun bitti!"],
+            draw: ["Dostluk kazandı!", "Berabere!", "İkisi de gitti!"],
+            powerup: ["Hediye!", "Bonus!", "Şanslısın!"]
+        };
+
+        // --- POWER-UP SYSTEM ---
+        let powerups = [];
+        let powerupTimer = 0;
+        let extraQuizChance = [0, 0, 0, 0]; // Per team
+
+
+        class PowerUp {
+            constructor() {
+                this.x = 100 + Math.random() * (mapWidth - 200);
+                this.y = -50; // Start above screen
+                this.vy = 0;
+                this.size = 25;
+                this.active = true;
+                this.grounded = false;
+                // Random type: 0 = health (+25), 1 = extra quiz
+                this.type = Math.random() > 0.5 ? 'health' : 'quiz';
+                this.animTimer = 0;
+            }
+
+            update() {
+                if (!this.active) return;
+
+                this.animTimer++;
+
+                if (!this.grounded) {
+                    this.vy += 0.2; // Gravity
+                    this.y += this.vy;
+
+                    // Land on terrain
+                    if (checkCollision(this.x, this.y + this.size)) {
+                        this.grounded = true;
+                        this.vy = 0;
+                    }
+                }
+
+                // Check collection by worms
+                for (let t of teams) {
+                    for (let w of t.worms) {
+                        if (!w.dead && Math.hypot(w.x - this.x, w.y - this.y) < 40) {
+                            this.collect(t, w);
+                            return;
+                        }
+                    }
+                }
+
+                // Timeout after 10 seconds (shorter)
+                if (this.animTimer > 600) this.active = false;
+            }
+
+            collect(team, worm) {
+                this.active = false;
+                AudioSys.playTone(800, "sine", 0.2);
+                showComment('powerup');
+
+                if (this.type === 'health') {
+                    worm.health = Math.min(100, worm.health + 25);
+                    floatTexts.push({ x: this.x, y: this.y, text: "+25 CAN", vy: -1, life: 1 });
+                } else {
+                    let teamIdx = teams.indexOf(team);
+                    extraQuizChance[teamIdx]++;
+                    floatTexts.push({ x: this.x, y: this.y, text: "+1 SORU", vy: -1, life: 1 });
+                }
+                updateHUD();
+            }
+
+            draw() {
+                if (!this.active) return;
+
+                let bob = Math.sin(this.animTimer * 0.08) * 2;
+
+                // Fade out when about to disappear (last 3 sec)
+                let alpha = this.animTimer > 420 ? 1 - (this.animTimer - 420) / 180 : 1;
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.translate(this.x, this.y + bob);
+
+                // WORMS-STYLE WOODEN CRATE
+                let s = this.size;
+
+                // Main wood body
+                let woodGrad = ctx.createLinearGradient(-s / 2, -s / 2, s / 2, s / 2);
+                woodGrad.addColorStop(0, "#D4A574");
+                woodGrad.addColorStop(0.5, "#B8956E");
+                woodGrad.addColorStop(1, "#8B6914");
+
+                ctx.fillStyle = woodGrad;
+                ctx.fillRect(-s / 2, -s / 2, s, s);
+
+                // Wood plank lines
+                ctx.strokeStyle = "#6B4423";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-s / 2, -s / 6); ctx.lineTo(s / 2, -s / 6);
+                ctx.moveTo(-s / 2, s / 6); ctx.lineTo(s / 2, s / 6);
+                ctx.stroke();
+
+                // Metal corner brackets
+                ctx.fillStyle = "#4A4A4A";
+                let cornerSize = 6;
+                // Top-left
+                ctx.fillRect(-s / 2, -s / 2, cornerSize, cornerSize * 2);
+                ctx.fillRect(-s / 2, -s / 2, cornerSize * 2, cornerSize);
+                // Top-right
+                ctx.fillRect(s / 2 - cornerSize, -s / 2, cornerSize, cornerSize * 2);
+                ctx.fillRect(s / 2 - cornerSize * 2, -s / 2, cornerSize * 2, cornerSize);
+                // Bottom corners
+                ctx.fillRect(-s / 2, s / 2 - cornerSize * 2, cornerSize, cornerSize * 2);
+                ctx.fillRect(-s / 2, s / 2 - cornerSize, cornerSize * 2, cornerSize);
+                ctx.fillRect(s / 2 - cornerSize, s / 2 - cornerSize * 2, cornerSize, cornerSize * 2);
+                ctx.fillRect(s / 2 - cornerSize * 2, s / 2 - cornerSize, cornerSize * 2, cornerSize);
+
+                // Metal rivets
+                ctx.fillStyle = "#7A7A7A";
+                ctx.beginPath();
+                ctx.arc(-s / 2 + 3, -s / 2 + 3, 2, 0, Math.PI * 2);
+                ctx.arc(s / 2 - 3, -s / 2 + 3, 2, 0, Math.PI * 2);
+                ctx.arc(-s / 2 + 3, s / 2 - 3, 2, 0, Math.PI * 2);
+                ctx.arc(s / 2 - 3, s / 2 - 3, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Icon in center
+                ctx.font = "bold 16px Arial";
+                ctx.fillStyle = this.type === 'health' ? "#e74c3c" : "#3498db";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(this.type === 'health' ? "+" : "?", 0, 0);
+
+                ctx.restore();
+            }
+        }
+
+        function spawnPowerUp() {
+            if (powerups.length < 3) {
+                powerups.push(new PowerUp());
+            }
+        }
+
+        function showComment(type) {
+            const list = comments[type] || comments['miss'];
+            const text = list[Math.floor(Math.random() * list.length)];
+            const el = document.getElementById('commentary');
+            document.getElementById('comment-text').innerText = text;
+            el.style.opacity = '1';
+            setTimeout(() => { el.style.opacity = '0'; }, 3000);
+        }
+
+        // --- MATH SYSTEM - GRADE/TOPIC BASED QUESTION BANKS ---
+        let usedQuestions = new Set();
+
+        const questionBanks = {
+            5: {
+                "Doğal Sayılar": [
+                    { q: "24 + 36 = ?", a: "60", d: ["50", "70", "56"] },
+                    { q: "85 - 27 = ?", a: "58", d: ["62", "52", "68"] },
+                    { q: "12 × 5 = ?", a: "60", d: ["55", "65", "50"] },
+                    { q: "72 ÷ 8 = ?", a: "9", d: ["8", "7", "6"] },
+                    { q: "15 × 4 = ?", a: "60", d: ["45", "55", "65"] },
+                    { q: "100 - 37 = ?", a: "63", d: ["67", "73", "53"] },
+                    { q: "8 × 7 = ?", a: "56", d: ["54", "48", "63"] },
+                    { q: "144 ÷ 12 = ?", a: "12", d: ["11", "13", "14"] },
+                    { q: "25 × 4 = ?", a: "100", d: ["90", "80", "110"] },
+                    { q: "81 ÷ 9 = ?", a: "9", d: ["8", "7", "10"] },
+                    { q: "17 + 28 = ?", a: "45", d: ["35", "55", "43"] },
+                    { q: "63 - 29 = ?", a: "34", d: ["32", "36", "44"] },
+                    { q: "11 × 11 = ?", a: "121", d: ["111", "131", "122"] },
+                    { q: "96 ÷ 8 = ?", a: "12", d: ["11", "10", "13"] },
+                    { q: "50 + 75 = ?", a: "125", d: ["115", "135", "120"] },
+                    { q: "200 - 85 = ?", a: "115", d: ["105", "125", "110"] },
+                    { q: "9 × 9 = ?", a: "81", d: ["72", "90", "79"] },
+                    { q: "108 ÷ 9 = ?", a: "12", d: ["11", "13", "10"] },
+                    { q: "33 + 47 = ?", a: "80", d: ["70", "90", "78"] },
+                    { q: "156 - 78 = ?", a: "78", d: ["68", "88", "82"] },
+                    { q: "250 × 4 = ?", a: "1000", d: ["800", "1200", "900"] },
+                    { q: "400 ÷ 50 = ?", a: "8", d: ["80", "4", "10"] },
+                    { q: "125 + 125 = ?", a: "250", d: ["200", "300", "225"] },
+                    { q: "1000 - 450 = ?", a: "550", d: ["650", "450", "500"] },
+                    { q: "15 × 6 = ?", a: "90", d: ["80", "100", "75"] },
+                    { q: "240 ÷ 6 = ?", a: "40", d: ["4", "60", "30"] },
+                    { q: "18 + 19 = ?", a: "37", d: ["36", "38", "27"] },
+                    { q: "90 - 45 = ?", a: "45", d: ["55", "35", "50"] },
+                    { q: "13 × 3 = ?", a: "39", d: ["36", "49", "33"] },
+                    { q: "120 ÷ 4 = ?", a: "30", d: ["40", "20", "25"] },
+                    { q: "55 + 45 = ?", a: "100", d: ["90", "110", "80"] },
+                    { q: "500 - 125 = ?", a: "375", d: ["385", "475", "275"] },
+                    { q: "20 × 5 = ?", a: "100", d: ["10", "200", "50"] },
+                    { q: "80 ÷ 5 = ?", a: "16", d: ["14", "18", "12"] },
+                    { q: "300 + 700 = ?", a: "1000", d: ["900", "1100", "1001"] },
+                    { q: "450 ÷ 9 = ?", a: "50", d: ["5", "500", "40"] },
+                    { q: "14 × 2 = ?", a: "28", d: ["26", "30", "24"] },
+                    { q: "100 - 99 = ?", a: "1", d: ["0", "2", "11"] }
+                ],
+                "Kesirler": [
+                    { q: "1/2 + 1/2 = ?", a: "1", d: ["2", "1/4", "2/4"] },
+                    { q: "3/4 + 1/4 = ?", a: "1", d: ["4/8", "2/4", "1/2"] },
+                    { q: "1/2 + 1/4 = ?", a: "3/4", d: ["2/6", "1/6", "2/4"] },
+                    { q: "5/8 - 3/8 = ?", a: "2/8", d: ["1/8", "3/8", "8/8"] },
+                    { q: "2/3 + 1/3 = ?", a: "1", d: ["3/6", "3/3", "2/3"] },
+                    { q: "7/10 - 3/10 = ?", a: "4/10", d: ["3/10", "5/10", "10/10"] },
+                    { q: "1/5 + 2/5 = ?", a: "3/5", d: ["2/5", "4/5", "3/10"] },
+                    { q: "4/6'nın sadeleşmiş hali?", a: "2/3", d: ["1/2", "3/4", "4/6"] },
+                    { q: "6/9'un sadeleşmiş hali?", a: "2/3", d: ["3/4", "1/3", "3/6"] },
+                    { q: "10/20'nin sadeleşmiş hali?", a: "1/2", d: ["1/4", "2/4", "5/10"] },
+                    { q: "1 tam = kaç yarım?", a: "2", d: ["1", "3", "4"] },
+                    { q: "1/4 + 1/4 + 1/4 = ?", a: "3/4", d: ["1", "2/4", "4/4"] },
+                    { q: "3/5 + 1/5 = ?", a: "4/5", d: ["1", "3/10", "2/5"] },
+                    { q: "9/10 - 2/10 = ?", a: "7/10", d: ["11/10", "5/10", "1"] },
+                    { q: "2 tam = kaç çeyrek?", a: "8", d: ["4", "6", "10"] },
+                    { q: "1/3 + 1/3 = ?", a: "2/3", d: ["1", "2/6", "3/3"] },
+                    { q: "5/6 - 2/6 = ?", a: "3/6", d: ["1/2", "3/12", "7/6"] },
+                    { q: "Hangisi 1/4'e eşit?", a: "2/8", d: ["1/2", "2/4", "4/8"] },
+                    { q: "1/2 kaç çeyrektir?", a: "2", d: ["1", "3", "4"] },
+                    { q: "6/8 sadeleşirse?", a: "3/4", d: ["1/2", "1/4", "2/3"] },
+                    { q: "1 tam - 1/4 = ?", a: "3/4", d: ["1/4", "1/2", "4/4"] },
+                    { q: "5/5 kaça eşittir?", a: "1", d: ["0", "5", "10"] },
+                    { q: "1/10 + 3/10 = ?", a: "4/10", d: ["2/10", "13/10", "1/2"] }
+                ],
+                "Geometrik Şekiller": [
+                    { q: "Üçgenin kaç kenarı var?", a: "3", d: ["4", "5", "2"] },
+                    { q: "Karenin kaç köşesi var?", a: "4", d: ["3", "5", "6"] },
+                    { q: "Dikdörtgenin kaç kenarı var?", a: "4", d: ["3", "5", "6"] },
+                    { q: "Beşgenin kaç açısı var?", a: "5", d: ["4", "6", "3"] },
+                    { q: "Altıgenin kenar sayısı?", a: "6", d: ["5", "7", "8"] },
+                    { q: "Dairenin kaç köşesi var?", a: "0", d: ["1", "2", "Sonsuz"] },
+                    { q: "Eşkenar üçgende tüm kenarlar?", a: "Eşit", d: ["Farklı", "2'si eşit", "Belirsiz"] },
+                    { q: "Karede tüm açılar kaç derece?", a: "90", d: ["60", "45", "180"] },
+                    { q: "Üçgenin iç açıları toplamı?", a: "180°", d: ["360°", "90°", "270°"] },
+                    { q: "Dörtgenin iç açıları toplamı?", a: "360°", d: ["180°", "270°", "540°"] },
+                    { q: "Paralel kenarlar hangi şekilde var?", a: "Paralelkenar", d: ["Üçgen", "Daire", "Yıldız"] },
+                    { q: "Eşkenar dörtgen hangisi?", a: "Kare", d: ["Dikdörtgen", "Yamuk", "Üçgen"] }
+                ],
+                "Çevre ve Alan": [
+                    { q: "Kenarı 5 cm olan karenin çevresi?", a: "20 cm", d: ["25 cm", "15 cm", "10 cm"] },
+                    { q: "Kenarı 4 cm olan karenin alanı?", a: "16 cm²", d: ["8 cm²", "12 cm²", "20 cm²"] },
+                    { q: "6×4 dikdörtgenin çevresi?", a: "20 cm", d: ["24 cm", "10 cm", "18 cm"] },
+                    { q: "5×3 dikdörtgenin alanı?", a: "15 cm²", d: ["16 cm²", "8 cm²", "18 cm²"] },
+                    { q: "Kenarı 10 cm karenin çevresi?", a: "40 cm", d: ["100 cm", "20 cm", "30 cm"] },
+                    { q: "7×2 dikdörtgenin alanı?", a: "14 cm²", d: ["9 cm²", "18 cm²", "12 cm²"] },
+                    { q: "Kenarı 3 cm karenin alanı?", a: "9 cm²", d: ["6 cm²", "12 cm²", "15 cm²"] },
+                    { q: "8×5 dikdörtgenin çevresi?", a: "26 cm", d: ["40 cm", "13 cm", "24 cm"] },
+                    { q: "Çevresi 24 cm olan karenin kenarı?", a: "6 cm", d: ["4 cm", "8 cm", "12 cm"] },
+                    { q: "Alanı 64 cm² olan karenin kenarı?", a: "8 cm", d: ["4 cm", "16 cm", "64 cm"] },
+                    { q: "Kısa kenarı 3 cm, alanı 12 cm² olan dikdörtgenin uzun kenarı?", a: "4 cm", d: ["6 cm", "5 cm", "9 cm"] },
+                    { q: "Çevresi 30 cm olan eşkenar üçgenin bir kenarı?", a: "10 cm", d: ["15 cm", "5 cm", "12 cm"] },
+                    { q: "Kenarları 5, 12, 13 olan üçgenin çevresi?", a: "30", d: ["25", "35", "40"] },
+                    { q: "Alanı 100 cm² olan karenin çevresi?", a: "40 cm", d: ["20 cm", "50 cm", "10 cm"] }
+                ]
+            },
+            6: {
+                "Tam Sayılar": [
+                    { q: "(-5) + 3 = ?", a: "-2", d: ["2", "-8", "8"] },
+                    { q: "(-7) + (-4) = ?", a: "-11", d: ["11", "-3", "3"] },
+                    { q: "8 - 12 = ?", a: "-4", d: ["4", "-20", "20"] },
+                    { q: "(-6) × 2 = ?", a: "-12", d: ["12", "-8", "8"] },
+                    { q: "(-3) × (-4) = ?", a: "12", d: ["-12", "7", "-7"] },
+                    { q: "15 ÷ (-3) = ?", a: "-5", d: ["5", "-3", "3"] },
+                    { q: "(-20) ÷ (-4) = ?", a: "5", d: ["-5", "4", "-4"] },
+                    { q: "(-9) + 9 = ?", a: "0", d: ["18", "-18", "1"] },
+                    { q: "|−7| = ?", a: "7", d: ["-7", "0", "1"] },
+                    { q: "|5 - 12| = ?", a: "7", d: ["-7", "17", "-17"] },
+                    { q: "(-2)³ = ?", a: "-8", d: ["8", "-6", "6"] },
+                    { q: "(-1)¹⁰ = ?", a: "1", d: ["-1", "0", "10"] },
+                    { q: "-15 + 8 = ?", a: "-7", d: ["7", "-23", "23"] },
+                    { q: "(-4) × 5 = ?", a: "-20", d: ["20", "-9", "9"] },
+                    { q: "0 - 8 = ?", a: "-8", d: ["8", "0", "-0"] },
+                    { q: "(-12) + (-5) = ?", a: "-17", d: ["17", "-7", "7"] },
+                    { q: "(-3) × 0 = ?", a: "0", d: ["-3", "3", "-0"] },
+                    { q: "(-10) ÷ 2 = ?", a: "-5", d: ["5", "-2", "2"] },
+                    { q: "|-100| = ?", a: "100", d: ["-100", "0", "1"] },
+                    { q: "(-2) + (-2) + (-2) = ?", a: "-6", d: ["6", "-8", "0"] }
+                ],
+                "Kesirler": [
+                    { q: "2/3 + 1/6 = ?", a: "5/6", d: ["3/9", "3/6", "1/2"] },
+                    { q: "3/4 - 1/2 = ?", a: "1/4", d: ["2/4", "1/2", "2/2"] },
+                    { q: "2/5 × 3 = ?", a: "6/5", d: ["5/5", "6/15", "5/6"] },
+                    { q: "1/2 ÷ 1/4 = ?", a: "2", d: ["1/8", "4", "1/2"] },
+                    { q: "5/6 - 1/3 = ?", a: "1/2", d: ["4/6", "2/3", "1/6"] },
+                    { q: "3/8 + 1/8 = ?", a: "1/2", d: ["4/16", "2/8", "3/4"] },
+                    { q: "2/3 × 3/4 = ?", a: "1/2", d: ["6/7", "5/12", "6/12"] },
+                    { q: "4/5 ÷ 2 = ?", a: "2/5", d: ["8/5", "4/10", "2/10"] },
+                    { q: "1 - 3/8 = ?", a: "5/8", d: ["3/8", "4/8", "2/8"] },
+                    { q: "7/10 + 1/5 = ?", a: "9/10", d: ["8/15", "8/10", "6/10"] },
+                    { q: "5/9 - 1/3 = ?", a: "2/9", d: ["4/9", "4/6", "1/6"] },
+                    { q: "3/10 × 2 = ?", a: "6/10", d: ["3/20", "5/10", "1/5"] },
+                    { q: "1/4 ÷ 2 = ?", a: "1/8", d: ["1/2", "2/4", "1/4"] },
+                    { q: "2/5 + 1/10 = ?", a: "5/10", d: ["3/15", "3/10", "1/2"] },
+                    { q: "3/4 - 1/8 = ?", a: "5/8", d: ["2/8", "1/2", "6/8"] },
+                    { q: "2 × 3/5 = ?", a: "6/5", d: ["5/5", "6/10", "5/2"] },
+                    { q: "10 ÷ 1/2 = ?", a: "20", d: ["5", "10", "2"] },
+                    { q: "1/3 + 1/4 = ?", a: "7/12", d: ["2/7", "1/7", "2/12"] },
+                    { q: "4/5 - 1/2 = ?", a: "3/10", d: ["3/5", "1/10", "2/5"] },
+                    { q: "5/6 × 1/5 = ?", a: "1/6", d: ["1/5", "1/30", "5/30"] },
+                    { q: "2/3 ÷ 3 = ?", a: "2/9", d: ["6/3", "2/1", "1/3"] },
+                    { q: "1 + 1/2 = ?", a: "3/2", d: ["1/2", "2/1", "1"] },
+                    { q: "2 - 1/4 = ?", a: "7/4", d: ["3/4", "1/4", "2"] },
+                    { q: "3/8 + 1/2 = ?", a: "7/8", d: ["4/10", "1", "1/2"] }
+                ],
+                "Oran-Orantı": [
+                    { q: "4:6 oranını sadeleştir", a: "2:3", d: ["1:2", "3:4", "4:6"] },
+                    { q: "x/6 = 2/3 ise x = ?", a: "4", d: ["3", "2", "6"] },
+                    { q: "3/5 = x/15 ise x = ?", a: "9", d: ["5", "3", "12"] },
+                    { q: "12'nin 3/4'ü kaçtır?", a: "9", d: ["8", "6", "10"] },
+                    { q: "20'nin %25'i kaçtır?", a: "5", d: ["4", "6", "10"] },
+                    { q: "8 ile 12'nin oranı?", a: "2:3", d: ["3:4", "4:6", "1:2"] },
+                    { q: "15'in 2/5'i kaçtır?", a: "6", d: ["5", "3", "10"] },
+                    { q: "x/4 = 12/16 ise x = ?", a: "3", d: ["4", "6", "8"] },
+                    { q: "24'ün %50'si kaçtır?", a: "12", d: ["6", "24", "18"] },
+                    { q: "30'un 1/6'sı kaçtır?", a: "5", d: ["6", "3", "10"] },
+                    { q: "40'ın %10'u kaçtır?", a: "4", d: ["40", "1", "10"] },
+                    { q: "7'nin 14'e oranı?", a: "1/2", d: ["2", "1/7", "7"] },
+                    { q: "3/4 = 75/x ise x = ?", a: "100", d: ["80", "125", "90"] },
+                    { q: "50 TL'nin %20'si kaç TL'dir?", a: "10", d: ["20", "5", "15"] },
+                    { q: "2 kg elma 40 TL ise 5 kg kaç TL?", a: "100", d: ["80", "120", "90"] }
+                ],
+                "Denklem": [
+                    { q: "x + 5 = 12 ise x = ?", a: "7", d: ["5", "17", "6"] },
+                    { q: "2x = 14 ise x = ?", a: "7", d: ["6", "8", "28"] },
+                    { q: "x - 8 = 3 ise x = ?", a: "11", d: ["5", "-5", "24"] },
+                    { q: "3x + 2 = 11 ise x = ?", a: "3", d: ["4", "2", "5"] },
+                    { q: "x/4 = 5 ise x = ?", a: "20", d: ["1", "9", "25"] },
+                    { q: "2x - 6 = 10 ise x = ?", a: "8", d: ["2", "16", "4"] },
+                    { q: "5x = 35 ise x = ?", a: "7", d: ["6", "8", "30"] },
+                    { q: "x + x + x = 15 ise x = ?", a: "5", d: ["3", "15", "45"] },
+                    { q: "4x - 8 = 0 ise x = ?", a: "2", d: ["4", "8", "-2"] },
+                    { q: "x/3 + 2 = 5 ise x = ?", a: "9", d: ["3", "6", "15"] }
+                ],
+                "Açılar": [
+                    { q: "Dik açı kaç derece?", a: "90°", d: ["180°", "45°", "360°"] },
+                    { q: "Doğru açı kaç derece?", a: "180°", d: ["90°", "360°", "270°"] },
+                    { q: "Tam açı kaç derece?", a: "360°", d: ["180°", "270°", "90°"] },
+                    { q: "45° hangi tür açı?", a: "Dar açı", d: ["Dik açı", "Geniş açı", "Doğru açı"] },
+                    { q: "120° hangi tür açı?", a: "Geniş açı", d: ["Dar açı", "Dik açı", "Tam açı"] },
+                    { q: "İki bütünler açının toplamı?", a: "180°", d: ["90°", "360°", "45°"] },
+                    { q: "İki tümler açının toplamı?", a: "90°", d: ["180°", "360°", "270°"] },
+                    { q: "60°'nin bütünleyeni kaç derece?", a: "120°", d: ["30°", "60°", "90°"] },
+                    { q: "50°'nin tümleyeni kaç derece?", a: "40°", d: ["130°", "50°", "310°"] },
+                    { q: "Karşı açılar birbirine?", a: "Eşit", d: ["Farklı", "Tümler", "Bütünler"] },
+                    { q: "70°'lik açının tümleri?", a: "20°", d: ["110°", "70°", "10°"] },
+                    { q: "150°'lik açının bütünleri?", a: "30°", d: ["40°", "20°", "150°"] },
+                    { q: "En küçük geniş açı kaç derecedir?", a: "91°", d: ["90°", "100°", "180°"] },
+                    { q: "Dar açı en fazla kaç derecedir?", a: "89°", d: ["90°", "80°", "45°"] }
+                ],
+                "Hacim": [
+                    { q: "2×3×4 küpün hacmi?", a: "24", d: ["9", "14", "36"] },
+                    { q: "Kenarı 3 cm küpün hacmi?", a: "27 cm³", d: ["9 cm³", "18 cm³", "81 cm³"] },
+                    { q: "5×2×3 dikdörtgenler prizmasının hacmi?", a: "30", d: ["10", "25", "15"] },
+                    { q: "Hacmi 64 cm³ olan küpün kenarı?", a: "4 cm", d: ["8 cm", "16 cm", "2 cm"] },
+                    { q: "Kenarı 5 cm küpün hacmi?", a: "125 cm³", d: ["25 cm³", "75 cm³", "15 cm³"] },
+                    { q: "4×4×4 küpün hacmi?", a: "64", d: ["16", "48", "12"] },
+                    { q: "3×5×2 prizmanın hacmi?", a: "30", d: ["10", "15", "25"] },
+                    { q: "Kenarı 2 cm küpün hacmi?", a: "8 cm³", d: ["4 cm³", "6 cm³", "12 cm³"] }
+                ]
+            },
+            7: {
+                "Rasyonel Sayılar": [
+                    { q: "-3/4 + 1/4 = ?", a: "-1/2", d: ["-2/4", "1/2", "-1/4"] },
+                    { q: "2/5 × (-3/4) = ?", a: "-6/20", d: ["6/20", "-6/9", "5/9"] },
+                    { q: "(-1/2) ÷ (1/4) = ?", a: "-2", d: ["2", "-1/8", "1/8"] },
+                    { q: "-0.5 + 0.3 = ?", a: "-0.2", d: ["0.2", "-0.8", "0.8"] },
+                    { q: "|-3/5| = ?", a: "3/5", d: ["-3/5", "5/3", "-5/3"] },
+                    { q: "(-2/3)² = ?", a: "4/9", d: ["-4/9", "2/9", "-2/9"] },
+                    { q: "-1.5 × 2 = ?", a: "-3", d: ["3", "-0.75", "0.75"] },
+                    { q: "3/4 - 5/4 = ?", a: "-1/2", d: ["1/2", "2/4", "-2/4"] },
+                    { q: "0.25 × 4 = ?", a: "1", d: ["0.1", "1.25", "0.5"] },
+                    { q: "-7/8 + 7/8 = ?", a: "0", d: ["14/8", "-14/8", "7/4"] },
+                    { q: "(-1/3) + (-1/3) = ?", a: "-2/3", d: ["2/3", "-1/6", "0"] },
+                    { q: "0.2 × (-0.4) = ?", a: "-0.08", d: ["0.08", "-0.8", "0.8"] },
+                    { q: "(-3/4) ÷ (-3/4) = ?", a: "1", d: ["-1", "0", "9/16"] },
+                    { q: "|-5/12| + 1/12 = ?", a: "1/2", d: ["6/12", "-4/12", "1/4"] },
+                    { q: "0.125 hangi kesir?", a: "1/8", d: ["1/4", "1/5", "1/10"] },
+                    { q: "(-1) - (-1/2) = ?", a: "-1/2", d: ["-3/2", "1/2", "0"] },
+                    { q: "3/7 × 7/3 = ?", a: "1", d: ["9/49", "49/9", "0"] },
+                    { q: "(-2) ÷ 0.5 = ?", a: "-4", d: ["-1", "4", "-0.25"] },
+                    { q: "-5/6 + 1/6 = ?", a: "-2/3", d: ["-4/6", "4/6", "-1"] },
+                    { q: "0.75 hangi kesir?", a: "3/4", d: ["2/3", "4/5", "7/10"] },
+                    { q: "-0.25 × (-4) = ?", a: "1", d: ["-1", "0.5", "-0.5"] },
+                    { q: "2/3 ÷ (-1/3) = ?", a: "-2", d: ["2", "-6/9", "6"] },
+                    { q: "|-7| + |-3| = ?", a: "10", d: ["-10", "4", "-4"] },
+                    { q: "(-0.6) + (-0.4) = ?", a: "-1", d: ["1", "-0.2", "0.2"] },
+                    { q: "-3/5 × (-5/3) = ?", a: "1", d: ["-1", "15/15", "0"] }
+                ],
+                "Cebirsel İfadeler": [
+                    { q: "3x + 2x = ?", a: "5x", d: ["6x", "5x²", "x"] },
+                    { q: "4a - a = ?", a: "3a", d: ["5a", "4", "3"] },
+                    { q: "2x × 3x = ?", a: "6x²", d: ["5x", "6x", "5x²"] },
+                    { q: "12y ÷ 4 = ?", a: "3y", d: ["3", "8y", "48y"] },
+                    { q: "2(x + 3) = ?", a: "2x + 6", d: ["2x + 3", "x + 6", "2x + 5"] },
+                    { q: "5x + 3 - 2x = ?", a: "3x + 3", d: ["7x + 3", "3x - 3", "5x"] },
+                    { q: "x × x × x = ?", a: "x³", d: ["3x", "x + 3", "3x²"] },
+                    { q: "-3(2a - 1) = ?", a: "-6a + 3", d: ["-6a - 3", "6a + 3", "-6a - 1"] },
+                    { q: "4m + 2m - 3m = ?", a: "3m", d: ["9m", "3m²", "3"] },
+                    { q: "(2x)(3y) = ?", a: "6xy", d: ["5xy", "6x + 6y", "2x + 3y"] },
+                    { q: "a + a + b + b = ?", a: "2a + 2b", d: ["4ab", "2ab", "a² + b²"] },
+                    { q: "3(2n - 4) = ?", a: "6n - 12", d: ["6n - 4", "2n - 12", "5n - 7"] },
+                    { q: "x/2 + x/2 = ?", a: "x", d: ["x/4", "2x", "x²"] },
+                    { q: "10y - (2y + 3) = ?", a: "8y - 3", d: ["8y + 3", "12y - 3", "12y + 3"] },
+                    { q: "m × m = ?", a: "m²", d: ["2m", "m", "m³"] },
+                    { q: "(5x + 3) + (2x - 1) = ?", a: "7x + 2", d: ["7x + 4", "3x + 2", "10x"] },
+                    { q: "x³ ÷ x = ?", a: "x²", d: ["x", "x⁴", "1"] },
+                    { q: "-2(3x + 5) = ?", a: "-6x - 10", d: ["-6x + 5", "6x - 10", "-5x - 7"] },
+                    { q: "5a × 2a = ?", a: "10a²", d: ["7a", "10a", "7a²"] },
+                    { q: "(3x - 2) - (x + 4) = ?", a: "2x - 6", d: ["4x + 2", "2x + 2", "4x - 6"] },
+                    { q: "x² × x³ = ?", a: "x⁵", d: ["x⁶", "x", "2x⁵"] },
+                    { q: "4(a + b) - 2a = ?", a: "2a + 4b", d: ["4a + 4b", "2a + 2b", "4b"] },
+                    { q: "15xy ÷ 3x = ?", a: "5y", d: ["5xy", "5", "12y"] },
+                    { q: "2x + 3x + 4x = ?", a: "9x", d: ["24x", "9x²", "9"] },
+                    { q: "-(x - 5) = ?", a: "-x + 5", d: ["x - 5", "-x - 5", "x + 5"] }
+                ],
+                "Denklemler": [
+                    { q: "3x - 5 = 10 ise x = ?", a: "5", d: ["15", "3", "-5"] },
+                    { q: "2(x + 4) = 14 ise x = ?", a: "3", d: ["7", "5", "11"] },
+                    { q: "5x + 3 = 3x + 9 ise x = ?", a: "3", d: ["6", "2", "-3"] },
+                    { q: "x/2 - 3 = 4 ise x = ?", a: "14", d: ["7", "2", "1"] },
+                    { q: "4(x - 2) = 12 ise x = ?", a: "5", d: ["3", "4", "6"] },
+                    { q: "-2x + 8 = 0 ise x = ?", a: "4", d: ["-4", "2", "-2"] },
+                    { q: "3x + 2 = x + 8 ise x = ?", a: "3", d: ["6", "5", "2"] },
+                    { q: "x - 7 = 2x - 12 ise x = ?", a: "5", d: ["-5", "19", "-19"] },
+                    { q: "6x = 2x + 20 ise x = ?", a: "5", d: ["4", "10", "20"] },
+                    { q: "(x + 5)/2 = 6 ise x = ?", a: "7", d: ["12", "1", "17"] },
+                    { q: "10 - x = 4 ise x = ?", a: "6", d: ["14", "-6", "4"] },
+                    { q: "3(x-1) = 6 ise x = ?", a: "3", d: ["2", "4", "5"] },
+                    { q: "x + 15 = 2x ise x = ?", a: "15", d: ["0", "5", "10"] },
+                    { q: "x/3 = 10 ise x = ?", a: "30", d: ["13", "7", "3"] },
+                    { q: "2x + x = 27 ise x = ?", a: "9", d: ["13", "24", "10"] },
+                    { q: "4x = 0 ise x = ?", a: "0", d: ["4", "-4", "1"] },
+                    { q: "2x + 1 = 5 ise x = ?", a: "2", d: ["3", "4", "1"] },
+                    { q: "x - 10 = -5 ise x = ?", a: "5", d: ["-15", "15", "-5"] },
+                    { q: "5x - 7 = 3x + 5 ise x = ?", a: "6", d: ["1", "-6", "12"] },
+                    { q: "x/4 + 2 = 5 ise x = ?", a: "12", d: ["3", "7", "28"] },
+                    { q: "-3x = 15 ise x = ?", a: "-5", d: ["5", "-12", "45"] },
+                    { q: "2(x + 3) = x + 10 ise x = ?", a: "4", d: ["7", "1", "8"] },
+                    { q: "7x - 3 = 4x + 9 ise x = ?", a: "4", d: ["2", "6", "-4"] },
+                    { q: "x/5 = 3 ise x = ?", a: "15", d: ["8", "5/3", "0.6"] },
+                    { q: "4x + 8 = 2x + 14 ise x = ?", a: "3", d: ["6", "11", "1"] }
+                ],
+                "Oran ve Orantı": [
+                    { q: "6:9 oranını sadeleştir", a: "2:3", d: ["3:4", "1:2", "6:9"] },
+                    { q: "x/8 = 3/4 ise x = ?", a: "6", d: ["4", "12", "2"] },
+                    { q: "2/5 = x/20 ise x = ?", a: "8", d: ["4", "10", "5"] },
+                    { q: "24'ün 3/4'ü kaçtır?", a: "18", d: ["16", "12", "20"] },
+                    { q: "5 kg 60 TL ise 8 kg kaç TL?", a: "96", d: ["80", "100", "72"] },
+                    { q: "10:15 oranını sadeleştir", a: "2:3", d: ["1:2", "5:7", "3:5"] },
+                    { q: "3/7 = 9/x ise x = ?", a: "21", d: ["27", "63", "12"] },
+                    { q: "40'ın 1/5'i kaçtır?", a: "8", d: ["5", "10", "4"] },
+                    { q: "50'nin %20'si kaçtır?", a: "10", d: ["25", "5", "20"] },
+                    { q: "4 işçi 6 günde bitirirse 6 işçi kaç günde?", a: "4", d: ["9", "8", "3"] },
+                    { q: "x/6 = 5/3 ise x = ?", a: "10", d: ["2", "15", "18"] },
+                    { q: "3 şişe 15 TL ise 7 şişe kaç TL?", a: "35", d: ["28", "42", "45"] },
+                    { q: "60'ın %25'i kaçtır?", a: "15", d: ["20", "12", "25"] },
+                    { q: "a:b = 2:5 ise b:a = ?", a: "5:2", d: ["2:5", "7:2", "1:3"] },
+                    { q: "36'nın 2/3'ü kaçtır?", a: "24", d: ["18", "12", "27"] },
+                    { q: "80'in %75'i kaçtır?", a: "60", d: ["50", "70", "55"] },
+                    { q: "2/3 = 10/x ise x = ?", a: "15", d: ["12", "6", "18"] },
+                    { q: "5 kitap 75 TL ise 3 kitap kaç TL?", a: "45", d: ["50", "40", "60"] },
+                    { q: "x:12 = 3:4 ise x = ?", a: "9", d: ["8", "6", "16"] },
+                    { q: "100'ün %10'u kaçtır?", a: "10", d: ["1", "100", "20"] },
+                    { q: "4:5 = x:20 ise x = ?", a: "16", d: ["25", "15", "10"] },
+                    { q: "45'in 1/3'ü kaçtır?", a: "15", d: ["12", "18", "9"] },
+                    { q: "3 metre 24 TL ise 5 metre kaç TL?", a: "40", d: ["32", "48", "36"] },
+                    { q: "1/4 = x/100 ise x = ?", a: "25", d: ["20", "4", "50"] },
+                    { q: "70'in %30'u kaçtır?", a: "21", d: ["30", "7", "28"] }
+                ],
+                "Yüzdeler": [
+                    { q: "120'nin %50'si kaçtır?", a: "60", d: ["50", "70", "24"] },
+                    { q: "80'in %25'i kaçtır?", a: "20", d: ["16", "25", "40"] },
+                    { q: "200'ün %10'u kaçtır?", a: "20", d: ["10", "2", "200"] },
+                    { q: "50'nin %100'ü kaçtır?", a: "50", d: ["100", "5000", "0.5"] },
+                    { q: "60, 120'nin yüzde kaçıdır?", a: "50", d: ["30", "60", "25"] },
+                    { q: "25, 100'ün yüzde kaçıdır?", a: "25", d: ["4", "75", "50"] },
+                    { q: "30'un %20'si kaçtır?", a: "6", d: ["10", "3", "15"] },
+                    { q: "45, 90'ın yüzde kaçıdır?", a: "50", d: ["45", "55", "100"] },
+                    { q: "150'nin %20'si kaçtır?", a: "30", d: ["20", "15", "75"] },
+                    { q: "40, 200'ün yüzde kaçıdır?", a: "20", d: ["5", "40", "80"] },
+                    { q: "Fiyatı %10 artan 100 TL kaç olur?", a: "110", d: ["10", "90", "101"] },
+                    { q: "Fiyatı %20 azalan 50 TL kaç olur?", a: "40", d: ["30", "10", "45"] },
+                    { q: "300'ün %33'ü yaklaşık kaçtır?", a: "100", d: ["33", "99", "90"] },
+                    { q: "16, 80'in yüzde kaçıdır?", a: "20", d: ["16", "5", "64"] },
+                    { q: "75'in %40'ı kaçtır?", a: "30", d: ["35", "25", "40"] },
+                    { q: "%15 indirimli 200 TL kaç olur?", a: "170", d: ["185", "30", "215"] },
+                    { q: "250'nin %4'ü kaçtır?", a: "10", d: ["100", "4", "62.5"] },
+                    { q: "Bir sayının %50'si 35 ise sayı kaçtır?", a: "70", d: ["17.5", "85", "100"] },
+                    { q: "60'ın %5'i kaçtır?", a: "3", d: ["12", "5", "30"] },
+                    { q: "Bir sayının %25'i 20 ise sayı kaçtır?", a: "80", d: ["5", "45", "100"] }
+                ],
+                "Dörtgenler": [
+                    { q: "Paralelkenarın karşı açıları?", a: "Eşit", d: ["Farklı", "90°", "Bütünler"] },
+                    { q: "Karenin köşegenleri birbirini?", a: "Dik keser", d: ["Eşit keser", "Paralel", "Kesmez"] },
+                    { q: "Dikdörtgenin köşegenleri?", a: "Eşit", d: ["Farklı", "Dik", "Paralel"] },
+                    { q: "Eşkenar dörtgenin kenarları?", a: "Eşit", d: ["Farklı", "İkisi eşit", "Paralel"] },
+                    { q: "Yamuğun kaç kenarı paralel?", a: "2", d: ["0", "4", "1"] },
+                    { q: "Paralelkenarın karşı kenarları?", a: "Eşit ve paralel", d: ["Dik", "Farklı", "Kesişir"] },
+                    { q: "Karenin tüm açıları?", a: "90°", d: ["60°", "45°", "120°"] },
+                    { q: "Eşkenar dörtgende köşegenler?", a: "Dik", d: ["Eşit", "Paralel", "Üst üste"] },
+                    { q: "Dikdörtgende köşegenler orta noktada?", a: "Eşit parçalara ayrılır", d: ["Dik kesilir", "Birleşmez", "Farklı olur"] },
+                    { q: "Karenin köşegen uzunluğu kenarın kaç katı?", a: "√2", d: ["2", "1.5", "1"] },
+                    { q: "Yamukta paralel olmayan kenarlar?", a: "Yan kenarlar", d: ["Taban", "Köşegen", "Yükseklik"] },
+                    { q: "Hangi dörtgende 4 kenar eşit?", a: "Kare ve eşkenar dörtgen", d: ["Dikdörtgen", "Yamuk", "Paralelkenar"] },
+                    { q: "Dikdörtgenin alanı a×b ise çevresi?", a: "2(a+b)", d: ["a+b", "4ab", "2ab"] },
+                    { q: "Paralelkenarın alanı = ?", a: "taban × yükseklik", d: ["taban + yükseklik", "çevre/2", "kenar²"] },
+                    { q: "Karede alan = 49 ise kenar?", a: "7", d: ["24.5", "14", "98"] }
+                ],
+                "Çember ve Daire": [
+                    { q: "Yarıçapı r olan çemberin çevresi?", a: "2πr", d: ["πr", "πr²", "2r"] },
+                    { q: "Yarıçapı r olan dairenin alanı?", a: "πr²", d: ["2πr", "πr", "r²"] },
+                    { q: "Çapı 10 cm olan dairenin yarıçapı?", a: "5 cm", d: ["10 cm", "20 cm", "2.5 cm"] },
+                    { q: "r = 7 cm ise çevre ≈ ? (π≈3)", a: "42 cm", d: ["21 cm", "14 cm", "49 cm"] },
+                    { q: "r = 5 cm ise alan ≈ ? (π≈3)", a: "75 cm²", d: ["30 cm²", "15 cm²", "25 cm²"] },
+                    { q: "Çap ile yarıçap ilişkisi?", a: "Çap = 2 × Yarıçap", d: ["Çap = Yarıçap", "Yarıçap = 2 × Çap", "Eşit"] },
+                    { q: "Merkez açı 90° ise yay çevrenin kaçı?", a: "1/4", d: ["1/2", "1/3", "3/4"] },
+                    { q: "r = 6 cm ise alan ≈ ? (π≈3)", a: "108 cm²", d: ["36 cm²", "18 cm²", "72 cm²"] },
+                    { q: "Çevresi 20π olan dairenin yarıçapı?", a: "10", d: ["20", "5", "40"] },
+                    { q: "Alanı 16π olan dairenin yarıçapı?", a: "4", d: ["8", "16", "2"] },
+                    { q: "r = 3 cm ise çevre ≈ ? (π≈3)", a: "18 cm", d: ["9 cm", "27 cm", "6 cm"] },
+                    { q: "Merkez açı 180° ise yay çevrenin kaçı?", a: "1/2", d: ["1/4", "1", "3/4"] },
+                    { q: "Daire ile çember arasındaki fark?", a: "Daire içi dolu, çember kenar", d: ["Aynı", "Boyut", "Renk"] },
+                    { q: "r = 10 cm ise alan ≈ ? (π≈3)", a: "300 cm²", d: ["100 cm²", "60 cm²", "30 cm²"] },
+                    { q: "Çember üzerindeki her nokta merkeze?", a: "Eşit uzaklıkta", d: ["Farklı uzaklıkta", "Daha yakın", "Değişken"] }
+                ]
+            },
+            8: {
+                "Üslü İfadeler": [
+                    { q: "2³ = ?", a: "8", d: ["6", "9", "4"] },
+                    { q: "5² = ?", a: "25", d: ["10", "15", "125"] },
+                    { q: "2⁴ = ?", a: "16", d: ["8", "32", "12"] },
+                    { q: "3³ = ?", a: "27", d: ["9", "81", "18"] },
+                    { q: "10³ = ?", a: "1000", d: ["100", "30", "1"] },
+                    { q: "2⁵ = ?", a: "32", d: ["10", "16", "64"] },
+                    { q: "(-2)² = ?", a: "4", d: ["-4", "2", "-2"] },
+                    { q: "(-3)³ = ?", a: "-27", d: ["27", "-9", "9"] },
+                    { q: "7⁰ = ?", a: "1", d: ["0", "7", "-1"] },
+                    { q: "2³ × 2² = ?", a: "32", d: ["12", "64", "10"] },
+                    { q: "3⁴ ÷ 3² = ?", a: "9", d: ["81", "27", "3"] },
+                    { q: "(2³)² = ?", a: "64", d: ["12", "32", "128"] },
+                    { q: "5¹ = ?", a: "5", d: ["1", "0", "25"] },
+                    { q: "4² × 4 = ?", a: "64", d: ["16", "12", "256"] },
+                    { q: "2⁶ = ?", a: "64", d: ["32", "128", "12"] },
+                    { q: "(-1)⁵ = ?", a: "-1", d: ["1", "5", "-5"] },
+                    { q: "10² ÷ 10 = ?", a: "10", d: ["100", "1", "0.1"] },
+                    { q: "5³ = ?", a: "125", d: ["15", "75", "25"] },
+                    { q: "3² × 3³ = ?", a: "243", d: ["27", "81", "9"] },
+                    { q: "(5²)² = ?", a: "625", d: ["100", "25", "50"] },
+                    { q: "2⁷ = ?", a: "128", d: ["64", "256", "14"] },
+                    { q: "4³ = ?", a: "64", d: ["12", "16", "48"] },
+                    { q: "(-4)² = ?", a: "16", d: ["-16", "8", "-8"] },
+                    { q: "6² = ?", a: "36", d: ["12", "18", "62"] },
+                    { q: "10⁴ = ?", a: "10000", d: ["1000", "40", "100"] }
+                ],
+                "Kareköklü İfadeler": [
+                    { q: "√9 = ?", a: "3", d: ["9", "81", "4.5"] },
+                    { q: "√16 = ?", a: "4", d: ["8", "2", "256"] },
+                    { q: "√25 = ?", a: "5", d: ["12.5", "625", "10"] },
+                    { q: "√49 = ?", a: "7", d: ["24.5", "14", "343"] },
+                    { q: "√100 = ?", a: "10", d: ["50", "1000", "20"] },
+                    { q: "√64 = ?", a: "8", d: ["32", "4", "16"] },
+                    { q: "√144 = ?", a: "12", d: ["72", "14", "24"] },
+                    { q: "√1 = ?", a: "1", d: ["0", "2", "-1"] },
+                    { q: "√36 = ?", a: "6", d: ["18", "3", "12"] },
+                    { q: "√81 = ?", a: "9", d: ["40.5", "27", "18"] },
+                    { q: "√4 + √9 = ?", a: "5", d: ["√13", "6", "13"] },
+                    { q: "√25 - √16 = ?", a: "1", d: ["√9", "9", "3"] },
+                    { q: "√36 × √4 = ?", a: "12", d: ["√40", "24", "8"] },
+                    { q: "√225 = ?", a: "15", d: ["12", "25", "13"] },
+                    { q: "√169 = ?", a: "13", d: ["14", "12", "15"] },
+                    { q: "√196 = ?", a: "14", d: ["13", "16", "15"] },
+                    { q: "√625 = ?", a: "25", d: ["15", "35", "20"] },
+                    { q: "√400 = ?", a: "20", d: ["10", "30", "40"] },
+                    { q: "√100 + √1 = ?", a: "11", d: ["10", "12", "101"] },
+                    { q: "3√4 = ?", a: "6", d: ["12", "7", "5"] },
+                    { q: "√256 = ?", a: "16", d: ["14", "18", "128"] },
+                    { q: "√121 = ?", a: "11", d: ["10", "12", "60.5"] },
+                    { q: "2√9 = ?", a: "6", d: ["18", "4.5", "11"] },
+                    { q: "√49 × √4 = ?", a: "14", d: ["7", "28", "53"] },
+                    { q: "√900 = ?", a: "30", d: ["9", "45", "300"] }
+                ],
+                "Özdeşlikler": [
+                    { q: "(x + 2)² açılımı?", a: "x² + 4x + 4", d: ["x² + 4", "x² + 2x + 4", "x² + 4x + 2"] },
+                    { q: "(a - 3)² açılımı?", a: "a² - 6a + 9", d: ["a² - 9", "a² - 3a + 9", "a² + 6a + 9"] },
+                    { q: "(x + 5)(x - 5) = ?", a: "x² - 25", d: ["x² + 25", "x² - 10x - 25", "2x - 25"] },
+                    { q: "(2x + 1)² açılımı?", a: "4x² + 4x + 1", d: ["2x² + 2x + 1", "4x² + 1", "4x² + 2x + 1"] },
+                    { q: "x² - 9 = ?", a: "(x-3)(x+3)", d: ["(x-9)(x+9)", "(x-3)²", "(x+3)²"] },
+                    { q: "(a + b)² = ?", a: "a² + 2ab + b²", d: ["a² + b²", "a² + ab + b²", "2a² + 2b²"] },
+                    { q: "(a - b)² = ?", a: "a² - 2ab + b²", d: ["a² - b²", "a² + 2ab + b²", "a² - ab + b²"] },
+                    { q: "(x + 1)² - (x - 1)² = ?", a: "4x", d: ["2", "2x²", "4x²"] },
+                    { q: "25 - x² = ?", a: "(5-x)(5+x)", d: ["(25-x)(25+x)", "(5-x)²", "(x-5)(x+5)"] },
+                    { q: "(3x)² = ?", a: "9x²", d: ["6x²", "3x²", "9x"] },
+                    { q: "(x-1)² açılımı?", a: "x² - 2x + 1", d: ["x² - 1", "x² + 1", "x² - 2x - 1"] },
+                    { q: "(2a-b)(2a+b) = ?", a: "4a² - b²", d: ["2a² - b²", "4a² + b²", "a² - b²"] },
+                    { q: "x² + 4x + 4 hangisinin karesi?", a: "(x+2)²", d: ["(x-2)²", "x²+2", "2x+2"] },
+                    { q: "m² - 16 = ?", a: "(m-4)(m+4)", d: ["(m-8)(m+8)", "(m-4)²", "m-4"] },
+                    { q: "(x + 4)² açılımı?", a: "x² + 8x + 16", d: ["x² + 16", "x² + 4x + 16", "x² + 8x + 4"] },
+                    { q: "(y - 2)² açılımı?", a: "y² - 4y + 4", d: ["y² - 4", "y² + 4y + 4", "y² - 2y + 4"] },
+                    { q: "a² - 49 = ?", a: "(a-7)(a+7)", d: ["(a-7)²", "(a+7)²", "a²-7"] },
+                    { q: "(3x + 2)² açılımı?", a: "9x² + 12x + 4", d: ["9x² + 4", "3x² + 12x + 4", "9x² + 6x + 4"] },
+                    { q: "x² - 100 = ?", a: "(x-10)(x+10)", d: ["(x-10)²", "x-100", "(x+10)²"] },
+                    { q: "(x + y)(x - y) = ?", a: "x² - y²", d: ["x² + y²", "x² - 2xy + y²", "2xy"] }
+                ],
+                "Çarpanlara Ayırma": [
+                    { q: "x² + 5x = ?", a: "x(x + 5)", d: ["x² + 5", "(x+5)²", "5x²"] },
+                    { q: "2x + 4 = ?", a: "2(x + 2)", d: ["2x + 2", "(x+4)", "x + 2"] },
+                    { q: "3x² - 6x = ?", a: "3x(x - 2)", d: ["3(x² - 2x)", "x(3x - 6)", "3x - 6"] },
+                    { q: "x² - 4 = ?", a: "(x-2)(x+2)", d: ["(x-4)(x+4)", "(x-2)²", "x² + 4"] },
+                    { q: "x² + 6x + 9 = ?", a: "(x+3)²", d: ["(x-3)²", "(x+9)²", "x(x+6)+9"] },
+                    { q: "x² - 10x + 25 = ?", a: "(x-5)²", d: ["(x+5)²", "(x-5)(x+5)", "x² - 25"] },
+                    { q: "4x - 8 = ?", a: "4(x - 2)", d: ["2(2x - 4)", "(x-8)", "4x - 2"] },
+                    { q: "x² + 2x + 1 = ?", a: "(x+1)²", d: ["(x-1)²", "(x+1)(x-1)", "x² + 1"] },
+                    { q: "9x² - 16 = ?", a: "(3x-4)(3x+4)", d: ["(3x-4)²", "(9x-16)", "3(x²-16)"] },
+                    { q: "xy + xz = ?", a: "x(y + z)", d: ["y(x + z)", "z(x + y)", "xyz"] },
+                    { q: "2x² + 4x = ?", a: "2x(x + 2)", d: ["2(x² + 2x)", "x(2x + 4)", "4x²"] },
+                    { q: "x² - 1 = ?", a: "(x-1)(x+1)", d: ["(x-1)²", "x² + 1", "x(x-1)"] },
+                    { q: "a³ + a² = ?", a: "a²(a + 1)", d: ["a(a² + a)", "a³ + 1", "(a+1)²"] },
+                    { q: "6x + 9 = ?", a: "3(2x + 3)", d: ["6(x + 3)", "9(x + 1)", "3x + 9"] },
+                    { q: "x² - 64 = ?", a: "(x-8)(x+8)", d: ["(x-8)²", "x(x-64)", "(x+8)²"] }
+                ],
+                "Olasılık": [
+                    { q: "Yazı-tura atışında yazı gelme olasılığı?", a: "1/2", d: ["1", "1/4", "2"] },
+                    { q: "Zarla 6 gelme olasılığı?", a: "1/6", d: ["1/3", "6", "1"] },
+                    { q: "Zarla çift sayı gelme olasılığı?", a: "1/2", d: ["1/3", "1/6", "2/3"] },
+                    { q: "Zarla 7 gelme olasılığı?", a: "0", d: ["1/7", "1/6", "1"] },
+                    { q: "3K, 2M olan torbadan K çekme olası?", a: "3/5", d: ["2/5", "1/2", "3/2"] },
+                    { q: "Olasılık değeri hangi aralıkta?", a: "0 ile 1", d: ["-1 ile 1", "0 ile 100", "1 ile 10"] },
+                    { q: "İmkansız olayın olasılığı?", a: "0", d: ["1", "-1", "∞"] },
+                    { q: "Kesin olayın olasılığı?", a: "1", d: ["0", "100", "∞"] },
+                    { q: "Zarla 3'ten büyük sayı olasılığı?", a: "1/2", d: ["1/3", "2/3", "1/6"] },
+                    { q: "52 karttan kupa as çekme olasılığı?", a: "1/52", d: ["4/52", "13/52", "1/4"] },
+                    { q: "Zarla asal sayı gelme olasılığı?", a: "1/2", d: ["1/3", "2/3", "1/6"] },
+                    { q: "4 mavi 4 kırmızı toptan mavi gelme?", a: "1/2", d: ["1/4", "1/8", "1"] },
+                    { q: "1, 2, 3, 4, 5 arasından tek sayı seçme?", a: "3/5", d: ["2/5", "1/2", "1"] },
+                    { q: "Zarla 5'ten küçük sayı olasılığı?", a: "2/3", d: ["1/2", "4/6", "1/3"] },
+                    { q: "2 zar atışında ikisinin de 6 gelme olası?", a: "1/36", d: ["1/6", "2/36", "1/12"] },
+                    { q: "1-10 arasında tek sayı seçme olası?", a: "1/2", d: ["5/9", "4/10", "6/10"] },
+                    { q: "3 madalya atışında en az 1 yazı olası?", a: "7/8", d: ["1/2", "3/8", "1/8"] },
+                    { q: "10 top, 4 kırmızı ise kırmızı gelme?", a: "2/5", d: ["4/6", "1/4", "6/10"] },
+                    { q: "Zarla 2 veya 4 gelme olasılığı?", a: "1/3", d: ["2/3", "1/6", "1/2"] },
+                    { q: "52 karttan sinek çekme olasılığı?", a: "1/4", d: ["13/52", "1/13", "4/52"] }
+                ],
+                "Denklemler": [
+                    { q: "x² = 9 ise x = ?", a: "±3", d: ["3", "-3", "81"] },
+                    { q: "x² - 4 = 0 ise x = ?", a: "±2", d: ["2", "-2", "4"] },
+                    { q: "2x² = 18 ise x = ?", a: "±3", d: ["9", "3", "-3"] },
+                    { q: "x² + 5 = 14 ise x = ?", a: "±3", d: ["9", "3", "19"] },
+                    { q: "3x - 2 = x + 6 ise x = ?", a: "4", d: ["2", "8", "-4"] },
+                    { q: "x² = 25 ise x = ?", a: "±5", d: ["5", "-5", "625"] },
+                    { q: "4x + 3 = 2x + 11 ise x = ?", a: "4", d: ["7", "2", "14"] },
+                    { q: "x² - 1 = 0 ise x = ?", a: "±1", d: ["1", "-1", "0"] },
+                    { q: "5(x - 2) = 3x + 4 ise x = ?", a: "7", d: ["4", "2", "14"] },
+                    { q: "x²/4 = 4 ise x = ?", a: "±4", d: ["4", "16", "2"] },
+                    { q: "x² = 100 ise x = ?", a: "±10", d: ["10", "50", "0"] },
+                    { q: "x² + 7 = 7 ise x = ?", a: "0", d: ["7", "-7", "1"] },
+                    { q: "3x² = 75 ise x = ?", a: "±5", d: ["25", "15", "5"] },
+                    { q: "x² = 121 ise x = ?", a: "±11", d: ["11", "12", "10"] },
+                    { q: "x² - 16 = 0 ise x = ?", a: "±4", d: ["4", "16", "8"] },
+                    { q: "x² = 0 ise x = ?", a: "0", d: ["1", "-1", "Yok"] },
+                    { q: "2x² = 32 ise x = ?", a: "±4", d: ["16", "8", "4"] },
+                    { q: "x² = 144 ise x = ?", a: "±12", d: ["12", "14", "10"] },
+                    { q: "x² + 1 = 10 ise x = ?", a: "±3", d: ["9", "3", "4"] },
+                    { q: "x²/2 = 50 ise x = ?", a: "±10", d: ["10", "25", "100"] },
+                    { q: "x² = 64 ise x = ?", a: "±8", d: ["8", "32", "16"] },
+                    { q: "x² = 169 ise x = ?", a: "±13", d: ["13", "26", "84.5"] },
+                    { q: "4x² = 100 ise x = ?", a: "±5", d: ["25", "10", "5"] },
+                    { q: "x² - 36 = 0 ise x = ?", a: "±6", d: ["6", "36", "18"] },
+                    { q: "x² = 196 ise x = ?", a: "±14", d: ["14", "98", "28"] }
+                ],
+                "Üçgenler": [
+                    { q: "Üçgenin iç açıları toplamı?", a: "180°", d: ["360°", "90°", "270°"] },
+                    { q: "Eşkenar üçgende her açı kaç derece?", a: "60°", d: ["90°", "45°", "120°"] },
+                    { q: "İkizkenar üçgende kaç kenar eşit?", a: "2", d: ["3", "1", "0"] },
+                    { q: "3-4-5 üçgeni hangi tür?", a: "Dik üçgen", d: ["Eşkenar", "İkizkenar", "Geniş açılı"] },
+                    { q: "Pisagor teoremi: a² + b² = ?", a: "c²", d: ["(a+b)²", "2ab", "ab"] },
+                    { q: "Dik üçgende 90° karşısındaki kenar?", a: "Hipotenüs", d: ["Dik kenar", "Taban", "Yükseklik"] },
+                    { q: "3 ve 4 dik kenarla hipotenüs?", a: "5", d: ["7", "12", "1"] },
+                    { q: "6 ve 8 dik kenarla hipotenüs?", a: "10", d: ["14", "48", "2"] },
+                    { q: "Üçgenin dış açıları toplamı?", a: "360°", d: ["180°", "540°", "270°"] },
+                    { q: "Geniş açılı üçgende en büyük açı?", a: ">90°", d: ["<90°", "=90°", "=180°"] },
+                    { q: "Dar açılı üçgende tüm açılar?", a: "<90°", d: [">90°", "=90°", "Farklı"] },
+                    { q: "5-12-? dik üçgende hipotenüs?", a: "13", d: ["17", "7", "60"] },
+                    { q: "Üçgenin alanı = ?", a: "taban×yükseklik/2", d: ["taban×yükseklik", "çevre/2", "kenar²"] },
+                    { q: "Eşkenar üçgenin kenarı 6 ise çevre?", a: "18", d: ["12", "36", "24"] },
+                    { q: "8-15-? dik üçgende hipotenüs?", a: "17", d: ["23", "7", "120"] }
+                ],
+                "Eşitsizlikler": [
+                    { q: "x + 3 > 5 ise x > ?", a: "2", d: ["3", "5", "8"] },
+                    { q: "2x < 10 ise x < ?", a: "5", d: ["10", "2", "20"] },
+                    { q: "x - 4 ≥ 6 ise x ≥ ?", a: "10", d: ["2", "6", "-10"] },
+                    { q: "3x ≤ 12 ise x ≤ ?", a: "4", d: ["12", "36", "9"] },
+                    { q: "-2x > 6 ise x < ?", a: "-3", d: ["3", "-6", "12"] },
+                    { q: "x + 5 < 0 ise x < ?", a: "-5", d: ["5", "0", "-10"] },
+                    { q: "x/2 > 3 ise x > ?", a: "6", d: ["1.5", "3", "1"] },
+                    { q: "4x - 8 ≥ 0 ise x ≥ ?", a: "2", d: ["8", "-2", "4"] },
+                    { q: "5 - x < 2 ise x > ?", a: "3", d: ["7", "-3", "2"] },
+                    { q: "-x ≤ 5 ise x ≥ ?", a: "-5", d: ["5", "0", "-10"] },
+                    { q: "2x + 1 > 7 ise x > ?", a: "3", d: ["4", "6", "8"] },
+                    { q: "x/3 ≤ 2 ise x ≤ ?", a: "6", d: ["2/3", "2", "9"] },
+                    { q: "-3x < 9 ise x > ?", a: "-3", d: ["3", "-9", "27"] },
+                    { q: "x - 7 > -2 ise x > ?", a: "5", d: ["9", "-5", "-9"] },
+                    { q: "6x ≥ 18 ise x ≥ ?", a: "3", d: ["18", "12", "108"] }
+                ]
+            }
+        };
+
+        // --- DİNAMİK SORU ÜRETİCİLER ---
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        const dynamicGenerators = {
+            5: {
+                "Doğal Sayılar": () => {
+                    const ops = [['+', (a, b) => a + b], ['-', (a, b) => a - b], ['×', (a, b) => a * b]];
+                    const [op, fn] = ops[rand(0, 2)];
+                    let a = rand(5, 50), b = rand(2, 20);
+                    if (op === '-' && a < b) [a, b] = [b, a];
+                    if (op === '×') { a = rand(2, 12); b = rand(2, 12); }
+                    const ans = fn(a, b);
+                    return { q: `${a} ${op} ${b} = ?`, a: String(ans), d: [String(ans + rand(1, 5)), String(ans - rand(1, 5)), String(ans + rand(-10, 10))] };
+                },
+                "Kesirler": () => {
+                    const payda = rand(2, 10);
+                    const p1 = rand(1, payda - 1), p2 = rand(1, payda - p1);
+                    const ans = p1 + p2;
+                    return { q: `${p1}/${payda} + ${p2}/${payda} = ?`, a: `${ans}/${payda}`, d: [`${ans - 1}/${payda}`, `${ans + 1}/${payda}`, `${ans}/${payda + 1}`] };
+                },
+                "Çevre ve Alan": () => {
+                    const kenar = rand(3, 12);
+                    const tip = rand(0, 1);
+                    if (tip === 0) {
+                        return { q: `Kenarı ${kenar} cm olan karenin çevresi?`, a: `${kenar * 4} cm`, d: [`${kenar * 3} cm`, `${kenar * 5} cm`, `${kenar * 2} cm`] };
+                    } else {
+                        return { q: `Kenarı ${kenar} cm olan karenin alanı?`, a: `${kenar * kenar} cm²`, d: [`${kenar * 4} cm²`, `${(kenar + 1) * (kenar + 1)} cm²`, `${kenar * (kenar - 1)} cm²`] };
+                    }
+                }
+            },
+            6: {
+                "Tam Sayılar": () => {
+                    const a = rand(-15, 15), b = rand(-15, 15);
+                    const ops = [['+', a + b], ['-', a - b], ['×', a * b]];
+                    const [op, ans] = ops[rand(0, 2)];
+                    return { q: `(${a}) ${op} (${b}) = ?`, a: String(ans), d: [String(ans + rand(1, 5)), String(-ans), String(ans - rand(1, 5))] };
+                },
+                "Oran-Orantı": () => {
+                    const a = rand(2, 10), b = rand(2, 5);
+                    const x = a * b;
+                    return { q: `${a}/${b} = ${x}/? (? yerine ne gelir?)`, a: String(b * b), d: [String(b * b + 1), String(b * b - 1), String(a)] };
+                },
+                "Denklem": () => {
+                    const x = rand(1, 15);
+                    const b = rand(1, 20);
+                    return { q: `x + ${b} = ${x + b} ise x = ?`, a: String(x), d: [String(x + 1), String(x - 1), String(b)] };
+                },
+                "Hacim": () => {
+                    const a = rand(2, 6), b = rand(2, 6), c = rand(2, 6);
+                    const v = a * b * c;
+                    return { q: `${a}×${b}×${c} dikdörtgenler prizmasının hacmi?`, a: String(v), d: [String(v + a), String(v - b), String(a + b + c)] };
+                }
+            },
+            7: {
+                "Rasyonel Sayılar": () => {
+                    const a = rand(-10, 10), b = rand(2, 6);
+                    const c = rand(-10, 10), d = rand(2, 6);
+                    if (b === d) {
+                        const ans = a + c;
+                        return { q: `${a}/${b} + ${c}/${d} = ?`, a: `${ans}/${b}`, d: [`${ans + 1}/${b}`, `${ans - 1}/${b}`, `${a * c}/${b}`] };
+                    }
+                    return { q: `|-${rand(1, 20)}| = ?`, a: String(rand(1, 20)), d: ["-" + rand(1, 20), "0", String(rand(1, 10))] };
+                },
+                "Cebirsel İfadeler": () => {
+                    const a = rand(2, 8), b = rand(2, 8);
+                    return { q: `${a}x + ${b}x = ?`, a: `${a + b}x`, d: [`${a * b}x`, `${a + b}x²`, `${a}x + ${b}`] };
+                },
+                "Denklemler": () => {
+                    const x = rand(1, 12);
+                    const a = rand(2, 5), b = rand(1, 20);
+                    const sonuc = a * x + b;
+                    return { q: `${a}x + ${b} = ${sonuc} ise x = ?`, a: String(x), d: [String(x + 1), String(x - 1), String(a)] };
+                },
+                "Oran ve Orantı": () => {
+                    const sayi = rand(20, 100);
+                    const oran = [10, 20, 25, 50][rand(0, 3)];
+                    const ans = sayi * oran / 100;
+                    return { q: `${sayi}'nin %${oran}'${oran === 10 || oran === 50 ? 'u' : 'si'} kaçtır?`, a: String(ans), d: [String(ans + 5), String(ans - 5), String(sayi)] };
+                },
+                "Yüzdeler": () => {
+                    const fiyat = rand(5, 20) * 10;
+                    const oran = [10, 20, 25][rand(0, 2)];
+                    const yeni = fiyat + (fiyat * oran / 100);
+                    return { q: `Fiyatı %${oran} artan ${fiyat} TL kaç olur?`, a: String(yeni), d: [String(fiyat), String(yeni + 10), String(yeni - 10)] };
+                },
+                "Çember ve Daire": () => {
+                    const r = rand(2, 10);
+                    const tip = rand(0, 1);
+                    if (tip === 0) {
+                        return { q: `r = ${r} ise çevre ≈ ? (π≈3)`, a: `${6 * r} cm`, d: [`${3 * r} cm`, `${9 * r} cm`, `${r * r * 3} cm`] };
+                    } else {
+                        return { q: `r = ${r} ise alan ≈ ? (π≈3)`, a: `${3 * r * r} cm²`, d: [`${6 * r} cm²`, `${r * r} cm²`, `${2 * r * r} cm²`] };
+                    }
+                }
+            },
+            8: {
+                "Üslü İfadeler": () => {
+                    const base = rand(2, 5);
+                    const exp = rand(2, 4);
+                    const ans = Math.pow(base, exp);
+                    return { q: `${base}${['⁰', '¹', '²', '³', '⁴'][exp]} = ?`, a: String(ans), d: [String(base * exp), String(ans + base), String(ans - base)] };
+                },
+                "Kareköklü İfadeler": () => {
+                    const n = rand(2, 15);
+                    const sqr = n * n;
+                    return { q: `√${sqr} = ?`, a: String(n), d: [String(n + 1), String(n - 1), String(sqr / 2)] };
+                },
+                "Özdeşlikler": () => {
+                    const a = rand(1, 6);
+                    const sqr = a * a;
+                    const dbl = 2 * a;
+                    return { q: `(x + ${a})² açılımı?`, a: `x² + ${dbl}x + ${sqr}`, d: [`x² + ${sqr}`, `x² + ${a}x + ${sqr}`, `x² + ${dbl}x + ${a}`] };
+                },
+                "Çarpanlara Ayırma": () => {
+                    const a = rand(2, 8);
+                    const b = rand(2, 8);
+                    return { q: `${a}x + ${a * b} = ?`, a: `${a}(x + ${b})`, d: [`${b}(x + ${a})`, `x(${a} + ${b})`, `${a * b}x`] };
+                },
+                "Denklemler": () => {
+                    const x = rand(2, 12);
+                    const sqr = x * x;
+                    return { q: `x² = ${sqr} ise x = ?`, a: `±${x}`, d: [String(x), String(-x), String(sqr / 2)] };
+                },
+                "Üçgenler": () => {
+                    const pairs = [[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17]];
+                    const [a, b, c] = pairs[rand(0, 3)];
+                    return { q: `${a} ve ${b} dik kenarla hipotenüs?`, a: String(c), d: [String(a + b), String(c + 1), String(c - 1)] };
+                },
+                "Eşitsizlikler": () => {
+                    const a = rand(2, 6);
+                    const b = rand(5, 30);
+                    const ans = Math.floor(b / a);
+                    return { q: `${a}x < ${b} ise x < ?`, a: String(ans), d: [String(ans + 1), String(b), String(a)] };
+                }
+            }
+        };
+
+        function generateQuestion() {
+            const bank = questionBanks[selectedGrade]?.[selectedTopic];
+            const generator = dynamicGenerators[selectedGrade]?.[selectedTopic];
+
+            // %50 statik, %50 dinamik (eğer her ikisi de varsa)
+            const useDynamic = generator && (Math.random() > 0.5 || !bank || usedQuestions.size >= bank.length);
+
+            if (useDynamic && generator) {
+                // Dinamik soru üret
+                const qData = generator();
+                return {
+                    q: qData.q,
+                    a: qData.a,
+                    options: [qData.a, ...qData.d].sort(() => Math.random() - 0.5)
+                };
+            }
+
+            // Statik bankadan çek
+            const finalBank = bank || questionBanks[8]["Özdeşlikler"];
+
+            if (usedQuestions.size >= finalBank.length) {
+                usedQuestions.clear();
+            }
+
+            let idx;
+            do {
+                idx = Math.floor(Math.random() * finalBank.length);
+            } while (usedQuestions.has(idx));
+
+            usedQuestions.add(idx);
+
+            const qData = finalBank[idx];
+            return {
+                q: qData.q,
+                a: qData.a,
+                options: [qData.a, ...qData.d].sort(() => Math.random() - 0.5)
+            };
+        }
+
+        // --- IMAGES ---
+        const wormSprite = new Image(); wormSprite.src = "worm_sprite.png";
+        const terrainImg = new Image(); terrainImg.src = "terrain_texture.png";
+        const skyBg = new Image(); skyBg.src = "sky_background.png";
+
+        // --- ENTITIES ---
+        class Worm {
+            constructor(x, teamIdx) {
+                this.x = x; this.team = teamIdx;
+                this.radius = 20; // Increased size
+                this.y = getTerrainHeight(x) - this.radius;
+                this.angle = 0;
+                this.aimAngle = -Math.PI / 4;
+                this.health = 100; this.dead = false;
+                this.vx = 0; this.vy = 0; this.animTimer = 0;
+
+                if (x > mapWidth / 2) this.flip();
+            }
+
+            flip() {
+                if (this.angle === 0) {
+                    this.angle = Math.PI;
+                    this.aimAngle = -Math.PI - this.aimAngle;
+                } else {
+                    this.angle = 0;
+                    this.aimAngle = -Math.PI - this.aimAngle;
+                }
+            }
+
+            setFacing(dir) {
+                if (dir > 0 && this.angle !== 0) this.flip();
+                if (dir < 0 && this.angle === 0) this.flip();
+            }
+
+            update() {
+                if (this.dead) return;
+
+                this.vy += 0.4; // Gravity (Increased from 0.35)
+
+                // Move X
+                if (Math.abs(this.vx) > 0.1) {
+                    for (let i = 0; i < Math.abs(this.vx); i++) {
+                        let step = Math.sign(this.vx);
+                        if (!checkCollision(this.x + step, this.y)) {
+                            this.x += step;
+                        } else if (!checkCollision(this.x + step, this.y - 2)) {
+                            // Step up GENTLE slope only (2px max)
+                            this.x += step; this.y -= 2;
+                        } else {
+                            this.vx = 0; break;
+                        }
+                    }
+                }
+
+                // Move Y
+                if (Math.abs(this.vy) > 0.1) {
+                    let steps = Math.ceil(Math.abs(this.vy));
+                    let stepY = this.vy / steps;
+                    for (let i = 0; i < steps; i++) {
+                        if (!checkCollision(this.x, this.y + stepY)) {
+                            this.y += stepY;
+                        } else {
+                            if (this.vy > 0) this.grounded = true;
+                            this.vy = 0; break;
+                        }
+                    }
+                } else {
+                    if (checkCollision(this.x, this.y + 1)) this.grounded = true;
+                    else this.grounded = false;
+                }
+
+                this.vx *= 0.8;
+                this.animTimer++;
+
+                if (this.y > waterLevel + 10) {
+                    this.health = 0; this.dead = true;
+                    createSplash(this.x, this.y); AudioSys.playSplash(); showComment('water');
+                    checkDeaths(); updateHUD(); checkGameOver();
+                }
+                if (this.x < 10) this.x = 10; if (this.x > mapWidth - 10) this.x = mapWidth - 10;
+            }
+
+            draw() {
+                if (this.dead) return;
+                ctx.save(); ctx.translate(this.x, this.y);
+                const teamData = teams[this.team];
+
+                // Health Bar
+                if (gameState !== 'FIRE_ANIM') {
+                    ctx.fillStyle = teamData.color; ctx.font = "bold 12px Nunito"; ctx.textAlign = "center";
+                    ctx.shadowColor = "black"; ctx.shadowBlur = 4;
+                    ctx.fillText(this.health + "%", 0, -40); ctx.shadowBlur = 0;
+                }
+
+                const lookDir = Math.cos(this.angle) > 0 ? 1 : -1;
+                let breath = Math.sin(this.animTimer * 0.1) * 1.5;
+
+                // --- PROCEDURAL WORM ---
+                // Body segments (from tail to head)
+                const segments = [
+                    { ox: -8 * lookDir, oy: 8 + breath * 0.5, r: 7 },  // Tail
+                    { ox: -2 * lookDir, oy: 2 + breath * 0.3, r: 9 },  // Body 1
+                    { ox: 3 * lookDir, oy: -5 + breath * 0.2, r: 10 }, // Body 2 (main)
+                    { ox: 6 * lookDir, oy: -14 + breath, r: 11 }       // Head
+                ];
+
+                // Draw each segment with 3D gradient
+                segments.forEach((seg, i) => {
+                    // Shadow
+                    ctx.fillStyle = "rgba(0,0,0,0.25)";
+                    ctx.beginPath(); ctx.arc(seg.ox + 2, seg.oy + 2, seg.r, 0, Math.PI * 2); ctx.fill();
+
+                    // 3D Sphere Gradient
+                    let grad = ctx.createRadialGradient(
+                        seg.ox - seg.r * 0.35, seg.oy - seg.r * 0.35, seg.r * 0.1,
+                        seg.ox, seg.oy, seg.r
+                    );
+                    grad.addColorStop(0, teamData.color);
+                    grad.addColorStop(0.5, teamData.bodyColor || teamData.body);
+                    grad.addColorStop(1, teamData.outline);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath(); ctx.arc(seg.ox, seg.oy, seg.r, 0, Math.PI * 2); ctx.fill();
+
+                    // Subtle shine arc
+                    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(seg.ox, seg.oy, seg.r * 0.7, -Math.PI * 0.6, -Math.PI * 0.2);
+                    ctx.stroke();
+                });
+
+                // --- EYES ---
+                const headSeg = segments[3];
+                const eyeOffsetX = 3 * lookDir;
+                const eyeY = headSeg.oy - 2;
+
+                // Eye whites
+                ctx.fillStyle = "white";
+                ctx.beginPath(); ctx.ellipse(headSeg.ox + eyeOffsetX - 3 * lookDir, eyeY, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(headSeg.ox + eyeOffsetX + 3 * lookDir, eyeY, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+                // Pupils (track aim angle slightly)
+                const pupilOffset = Math.cos(this.aimAngle) * 1.5;
+                ctx.fillStyle = "#1a1a1a";
+                ctx.beginPath(); ctx.arc(headSeg.ox + eyeOffsetX - 3 * lookDir + pupilOffset, eyeY + 1, 2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(headSeg.ox + eyeOffsetX + 3 * lookDir + pupilOffset, eyeY + 1, 2, 0, Math.PI * 2); ctx.fill();
+
+                // Eye glints
+                ctx.fillStyle = "rgba(255,255,255,0.9)";
+                ctx.beginPath(); ctx.arc(headSeg.ox + eyeOffsetX - 4 * lookDir, eyeY - 2, 1.2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(headSeg.ox + eyeOffsetX + 2 * lookDir, eyeY - 2, 1.2, 0, Math.PI * 2); ctx.fill();
+
+                // --- HEADBAND (active player) ---
+                if (teams[currentPlayer].worms.includes(this)) {
+                    ctx.fillStyle = this.team === 0 ? "#2563eb" : (this.team === 1 ? "#dc2626" : (this.team === 2 ? "#15803d" : "#7e22ce"));
+                    ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 8;
+                    ctx.fillRect(headSeg.ox - 7, headSeg.oy - headSeg.r - 3 + breath, 14, 4);
+                    ctx.shadowBlur = 0;
+                }
+
+                // --- AIM LINE & INDICATOR ---
+                if (teams[currentPlayer].worms.includes(this) && gameState !== "FIRE_ANIM") {
+                    // Use a stable head position (without breath) for the laser base
+                    const hX = headSeg.ox, hY = -19; // -14 (base oy) - 5 (offset)
+                    const ax = hX + Math.cos(this.aimAngle) * 70;
+                    const ay = hY + Math.sin(this.aimAngle) * 70;
+
+                    // Laser Sight
+                    ctx.beginPath();
+                    let grad = ctx.createLinearGradient(hX, hY, ax, ay);
+                    grad.addColorStop(0, "rgba(255,255,255,0.8)");
+                    grad.addColorStop(1, "rgba(255,255,255,0)");
+                    ctx.strokeStyle = grad; ctx.lineWidth = 2; ctx.moveTo(hX, hY); ctx.lineTo(ax, ay); ctx.stroke();
+
+                    // Holographic-style aim indicator
+                    ctx.save();
+                    ctx.translate(ax, ay);
+                    ctx.rotate(this.aimAngle);
+
+                    // Outer spinning-style rings
+                    ctx.shadowColor = teamData.color;
+                    ctx.shadowBlur = 10;
+                    ctx.strokeStyle = teamData.color;
+                    ctx.lineWidth = 2;
+
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 14, -1, 1);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 14, Math.PI - 1, Math.PI + 1);
+                    ctx.stroke();
+
+                    // Inner glass sphere
+                    let circleGrad = ctx.createRadialGradient(-3, -3, 2, 0, 0, 11);
+                    circleGrad.addColorStop(0, "#fff");
+                    circleGrad.addColorStop(0.3, teamData.color);
+                    circleGrad.addColorStop(1, "rgba(0,0,0,0.5)");
+
+                    ctx.fillStyle = circleGrad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 11, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Pointer arrow (sharp)
+                    ctx.fillStyle = "#fff";
+                    ctx.beginPath();
+                    ctx.moveTo(15, 0);
+                    ctx.lineTo(6, -6);
+                    ctx.lineTo(6, 6);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Central crosshair dot
+                    ctx.fillStyle = "#fff";
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+                }
+                ctx.restore();
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, angle, force) {
+                this.x = x; this.y = y; this.radius = 5;
+                // POWER ADJUSTMENT: Lower multiplier for better control at low power
+                const speed = Math.min(force * 1.8, 16);
+                this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+                this.active = true; this.timer = 0;
+            }
+            update() {
+                if (!this.active) return;
+
+                // Pixel-step for accuracy
+                const steps = 4;
+                for (let s = 0; s < steps; s++) {
+                    this.x += this.vx / steps;
+                    this.y += this.vy / steps;
+
+                    if (checkCollision(this.x, this.y)) {
+                        explode(this.x, this.y, 65);
+                        this.active = false;
+                        return;
+                    }
+
+                    // Direct hit check
+                    for (let t of teams) {
+                        for (let w of t.worms) {
+                            if (!w.dead && Math.hypot(w.x - this.x, w.y - this.y) < 15) {
+                                explode(this.x, this.y, 70);
+                                this.active = false;
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                this.vy += 0.12;
+                // WIND IMPACT: Reduced for better playability
+                this.vx += wind * 0.0003;
+                this.timer++;
+
+                if (this.timer % 2 === 0) {
+                    particles.push({ x: this.x, y: this.y, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, life: 1.5, color: "#ff6600", size: 5 });
+                }
+
+                // Only destroy if out of MAP bounds (not screen) or too long
+                // Allow going above screen (y < -500) - it will fall back
+                if (this.x < -100 || this.x > mapWidth + 100 || this.y > waterLevel + 100 || this.timer > 600) {
+                    this.active = false; showComment('miss'); endTurnDelayed(1000); return;
+                }
+            }
+            draw() {
+                if (!this.active) return;
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(Math.atan2(this.vy, this.vx));
+
+                // Glowing trail
+                ctx.shadowColor = "red"; ctx.shadowBlur = 10;
+
+                // 3D Missile
+                let grad = ctx.createRadialGradient(-2, -2, 0, 0, 0, 8);
+                grad.addColorStop(0, "#fff");
+                grad.addColorStop(0.3, "#fca5a5");
+                grad.addColorStop(1, "#dc2626");
+
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.ellipse(0, 0, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
+        function init() {
+            window.addEventListener('resize', resize);
+            setupControls();
+            resize();
+            requestAnimationFrame(loop);
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            waterLevel = mapHeight - 60; // Water at bottom of large map
+            if (gameState === "MENU") generateMap();
+        }
+
+        function generateMap() {
+            terrainCanvas.width = mapWidth;
+            terrainCanvas.height = mapHeight;
+            terrainCtx.clearRect(0, 0, mapWidth, mapHeight);
+            heightmap = [];
+
+            // 1. Generate VARIED terrain - different each game!
+            // Height range: 30%-70% (higher terrain, more visible)
+            let terrainStyle = Math.floor(Math.random() * 4); // 0-3 different styles
+
+            // Create control points for terrain shape
+            let points = [];
+            let numPoints = 20 + Math.floor(Math.random() * 15); // 20-35 points
+
+            for (let i = 0; i <= numPoints; i++) {
+                let x = (i / numPoints) * mapWidth;
+                let minY, maxY;
+
+                // Different terrain styles
+                switch (terrainStyle) {
+                    case 0: // Hilly - gentle variation
+                        minY = mapHeight * 0.40;
+                        maxY = mapHeight * 0.60;
+                        break;
+                    case 1: // Mountainous - dramatic peaks
+                        minY = mapHeight * 0.20;
+                        maxY = mapHeight * 0.70;
+                        break;
+                    case 2: // Valley - deep dips
+                        let distFromCenter = Math.abs(i - numPoints / 2) / (numPoints / 2);
+                        minY = mapHeight * (0.25 + distFromCenter * 0.25);
+                        maxY = mapHeight * (0.45 + distFromCenter * 0.25);
+                        break;
+                    case 3: // Cliff heavy - vertical walls
+                        minY = mapHeight * 0.30;
+                        maxY = mapHeight * 0.70;
+                        break;
+                }
+
+                let y = minY + Math.random() * (maxY - minY);
+                let isCliff = false; // Mark as vertical cliff
+
+                // Add VERTICAL cliffs (every 2-5 points)
+                if (i > 0 && i % (2 + Math.floor(Math.random() * 4)) === 0) {
+                    // Big vertical drop/rise
+                    let cliffSize = 100 + Math.random() * 150;
+                    y = points[i - 1].y + (Math.random() > 0.5 ? -cliffSize : cliffSize);
+                    y = Math.max(mapHeight * 0.20, Math.min(mapHeight * 0.80, y));
+                    isCliff = true;
+                }
+                points.push({ x, y, isCliff });
+            }
+
+            // Interpolate heightmap - use LINEAR for cliffs, SMOOTH for normal
+            for (let x = 0; x <= mapWidth; x++) {
+                let idx = 0;
+                for (let i = 0; i < points.length - 1; i++) {
+                    if (x >= points[i].x && x <= points[i + 1].x) {
+                        idx = i;
+                        break;
+                    }
+                }
+                let p1 = points[idx];
+                let p2 = points[Math.min(idx + 1, points.length - 1)];
+                let t = (p2.x - p1.x) > 0 ? (x - p1.x) / (p2.x - p1.x) : 0;
+
+                let baseH;
+                if (p2.isCliff) {
+                    // LINEAR interpolation for STEEP vertical cliffs
+                    baseH = p1.y + (p2.y - p1.y) * t;
+                } else {
+                    // Smooth cosine interpolation for normal hills
+                    let smoothT = (1 - Math.cos(t * Math.PI)) / 2;
+                    baseH = p1.y + (p2.y - p1.y) * smoothT;
+                }
+
+                // Add small bumps/details
+                let detail = Math.sin(x * 0.02) * 15 + Math.sin(x * 0.05) * 8 + Math.sin(x * 0.1) * 4;
+                heightmap[x] = baseH + detail;
+            }
+
+            // 2. Draw LAYERED soil - darker as it goes deeper
+            // Layer 1: Topsoil (light brown) - first 30px below grass
+            for (let layer = 0; layer < 4; layer++) {
+                let colors = ["#A0522D", "#8B4513", "#6B3A0A", "#4A2A08"]; // Light to dark
+                let depths = [30, 80, 150, mapHeight]; // Layer thicknesses
+
+                terrainCtx.fillStyle = colors[layer];
+                terrainCtx.beginPath();
+                terrainCtx.moveTo(0, mapHeight);
+
+                for (let x = 0; x <= mapWidth; x++) {
+                    let baseH = heightmap[x];
+                    let layerTop = baseH + (layer > 0 ? depths[layer - 1] : 0);
+                    terrainCtx.lineTo(x, Math.min(layerTop, mapHeight));
+                }
+                terrainCtx.lineTo(mapWidth, mapHeight);
+                terrainCtx.closePath();
+                terrainCtx.fill();
+            }
+
+            // Add soil texture details (reduced for performance)
+            for (let i = 0; i < 150; i++) {
+                let x = Math.random() * mapWidth;
+                let baseH = heightmap[Math.floor(x)] || mapHeight * 0.5;
+                let y = baseH + 20 + Math.random() * 200;
+                if (y > mapHeight - 20) continue;
+
+                // Color based on depth
+                let depth = y - baseH;
+                let shade = Math.floor(60 - depth * 0.2);
+                terrainCtx.fillStyle = `rgb(${shade + 50}, ${shade + 20}, ${shade})`;
+                terrainCtx.fillRect(x, y, 2 + Math.random() * 3, 1 + Math.random() * 2);
+            }
+
+            // 3. Add ANGULAR ROCK/STONE pieces (reduced for performance)
+            for (let i = 0; i < 30; i++) {
+                let x = Math.random() * mapWidth;
+                let baseH = heightmap[Math.floor(x)] || mapHeight * 0.6;
+                // Much deeper - at least 80px below grass
+                let y = baseH + 80 + Math.random() * 150;
+                // Skip if too close to bottom
+                if (y > mapHeight - 100) continue;
+
+                let size = 10 + Math.random() * 25; // Smaller rocks
+
+                // Create angular polygon rock (5-8 vertices)
+                let numPoints = 5 + Math.floor(Math.random() * 4);
+                let points = [];
+                for (let p = 0; p < numPoints; p++) {
+                    let angle = (p / numPoints) * Math.PI * 2;
+                    let dist = size * (0.6 + Math.random() * 0.4); // Irregular
+                    points.push({
+                        px: x + Math.cos(angle) * dist,
+                        py: y + Math.sin(angle) * dist * 0.7 // Slightly flat
+                    });
+                }
+
+                // Draw with gradient
+                let rockGrad = terrainCtx.createRadialGradient(
+                    x - size * 0.2, y - size * 0.2, 0,
+                    x, y, size
+                );
+                rockGrad.addColorStop(0, "#A09080");
+                rockGrad.addColorStop(0.4, "#706050");
+                rockGrad.addColorStop(1, "#403830");
+
+                terrainCtx.fillStyle = rockGrad;
+                terrainCtx.beginPath();
+                terrainCtx.moveTo(points[0].px, points[0].py);
+                for (let p = 1; p < points.length; p++) {
+                    terrainCtx.lineTo(points[p].px, points[p].py);
+                }
+                terrainCtx.closePath();
+                terrainCtx.fill();
+
+                // Dark edge
+                terrainCtx.strokeStyle = "#2A2520";
+                terrainCtx.lineWidth = 1.5;
+                terrainCtx.stroke();
+            }
+
+            // 4. Add GREEN grass layer on top (following heightmap)
+            terrainCtx.fillStyle = "#4CAF50";
+            terrainCtx.beginPath();
+            terrainCtx.moveTo(0, heightmap[0]);
+            for (let x = 0; x <= mapWidth; x++) {
+                terrainCtx.lineTo(x, heightmap[x]);
+            }
+            // Grass thickness ~15px
+            for (let x = mapWidth; x >= 0; x--) {
+                terrainCtx.lineTo(x, heightmap[x] + 15);
+            }
+            terrainCtx.closePath();
+            terrainCtx.fill();
+
+            // 5. Add grass texture details (darker lines)
+            terrainCtx.strokeStyle = "#388E3C";
+            terrainCtx.lineWidth = 2;
+            for (let x = 0; x < mapWidth; x += 12) {
+                terrainCtx.beginPath();
+                terrainCtx.moveTo(x, heightmap[x]);
+                terrainCtx.lineTo(x + 2, heightmap[x] + 8);
+                terrainCtx.stroke();
+            }
+
+            // Generate fast collision mask
+            updateCollisionMask();
+        }
+
+        function updateCollisionMask() {
+            const imageData = terrainCtx.getImageData(0, 0, mapWidth, mapHeight);
+            terrainData = new Uint8Array(mapWidth * mapHeight);
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                terrainData[i / 4] = imageData.data[i + 3] > 128 ? 1 : 0;
+            }
+        }
+
+        function checkCollision(x, y) {
+            x = Math.floor(x);
+            y = Math.floor(y);
+            if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight) return false;
+            // Use bitmask instead of getImageData for 100x better performance
+            return terrainData && terrainData[y * mapWidth + x] === 1;
+        }
+
+        function getTerrainHeight(x) {
+            // Scan DOWNWARD from top to find surface (ensures spawn ABOVE terrain)
+            x = Math.floor(Math.max(0, Math.min(mapWidth - 1, x)));
+            for (let y = 0; y < waterLevel; y += 2) {
+                if (checkCollision(x, y)) {
+                    // Found surface! Return position ABOVE it
+                    return y - 5; // 5px above surface
+                }
+            }
+            return heightmap[x] || mapHeight * 0.7; // Fallback
+        }
+
+        // --- SPAWN LOGIC (Distributed across LARGE map) ---
+        function getSafeSpawnX(sectorIndex, totalSectors) {
+            // Divide MAP (not screen) into sectors
+            let safeWidth = mapWidth * 0.8;
+            let startX = (mapWidth - safeWidth) / 2;
+            let sectorSize = safeWidth / (totalSectors - 1);
+
+            // Position based on index
+            let targetX = startX + (sectorIndex * sectorSize);
+
+            // Local search for flat-ish ground
+            let bestX = targetX;
+            let highestY = 9999;
+            for (let x = targetX - 40; x < targetX + 40; x += 10) {
+                if (x < 0 || x > mapWidth) continue;
+                let y = getTerrainHeight(x);
+                if (y < waterLevel - 60 && y < highestY) { highestY = y; bestX = x; }
+            }
+            return bestX;
+        }
+
+        function explode(x, y, radius) {
+            explosions.push({ x, y, r: 0, maxR: radius });
+            AudioSys.playExplosion();
+
+            // 1. Destruct terrain bitmap
+            terrainCtx.globalCompositeOperation = 'destination-out';
+            terrainCtx.beginPath();
+            terrainCtx.arc(x, y, radius, 0, Math.PI * 2);
+            terrainCtx.fill();
+            terrainCtx.globalCompositeOperation = 'source-over';
+
+            // Sync bitmask
+            updateCollisionMask();
+
+            // Visual debris
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 18, vy: (Math.random() - 0.5) * 18,
+                    life: 1.2 + Math.random() * 0.6,
+                    color: Math.random() > 0.3 ? (Math.random() > 0.5 ? "#FFA500" : "#FF4500") : "#555",
+                    size: 4 + Math.random() * 4
+                });
+            }
+
+            let hit = false;
+            teams.forEach(t => t.worms.forEach(w => {
+                if (w.dead) return;
+                let d = Math.hypot(w.x - x, w.y - y);
+                if (d < radius + 40) {
+                    hit = true;
+                    let dmg = Math.floor((1 - d / (radius + 40)) * 95);
+                    if (dmg < 10) dmg = 10;
+                    w.health = Math.max(0, w.health - dmg);
+                    floatTexts.push({ x: w.x, y: w.y - 30, text: "-" + dmg, life: 1.5, vy: -1.2 });
+
+                    let ang = Math.atan2(w.y - y, w.x - x);
+                    let force = (1 - d / (radius + 40)) * 18;
+                    w.vx = Math.cos(ang) * force;
+                    w.vy = Math.sin(ang) * force - 4;
+                    w.grounded = false;
+                }
+            }));
+
+            checkDeaths();
+            updateHUD();
+            if (hit) showComment('hit'); else showComment('miss');
+            endTurnDelayed();
+        }
+
+        function createSplash(x, y) {
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x, y: waterLevel,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: -Math.random() * 6,
+                    life: 1,
+                    color: '#38bdf8',
+                    size: 3 + Math.random() * 3
+                });
+            }
+        }
+
+        // startGame removed (duplicate)
+
+        function setupHUD() {
+            const container = document.getElementById('health-bars-container');
+            container.innerHTML = '';
+            teams.forEach((t, i) => {
+                let div = document.createElement('div');
+                div.className = "flex flex-col items-center";
+                div.innerHTML = `
+                    <div class="bg-gray-800/90 border-2 text-white px-2 py-1 rounded-lg shadow-lg flex flex-col items-center min-w-[70px]" style="border-color:${t.color}">
+                        <span class="text-[10px] font-bold" style="color:${t.color}">${t.name}</span>
+                        <span id="p${i}-health" class="text-lg game-font">100</span>
+                    </div>
+                    <div class="w-16 md:w-20 h-3 bg-gray-800 border border-gray-600 rounded-full mt-1 overflow-hidden">
+                        <div id="p${i}-bar" class="h-full w-full transition-all duration-300 ${t.bgClass}"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateHUD() {
+            const container = document.getElementById('health-bars-container');
+            container.innerHTML = '';
+            teams.forEach((t, idx) => {
+                let alive = t.worms.some(w => !w.dead);
+                if (!alive) return;
+
+                let div = document.createElement('div');
+                div.className = `${t.bgClass || teamConfigs[idx].bg} px-3 py-2 rounded-lg border-2 border-white/30 backdrop-blur-sm flex flex-col items-center`;
+                if (idx === currentPlayer) {
+                    div.style.boxShadow = '0 0 15px rgba(255,255,255,0.8)';
+                    div.style.borderColor = 'white';
+                }
+
+                div.innerHTML = `
+                    <div class="text-white font-bold text-xs">${t.name}</div>
+                    <div class="text-white text-lg font-bold">${t.worms[0].health}%</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function goToMenu() {
+            gameState = "MENU";
+            clearInterval(turnInterval);
+            // Show menu and reset to view selection
+            document.getElementById('menu-screen').classList.remove('hidden');
+            document.getElementById('view-selection').classList.remove('hidden');
+            document.getElementById('grade-selection').classList.add('hidden');
+            document.getElementById('topic-selection').classList.add('hidden');
+            document.getElementById('player-selection').classList.add('hidden');
+            document.getElementById('message-area').classList.add('hidden');
+            document.getElementById('game-over-controls').classList.add('hidden');
+            document.getElementById('math-modal').classList.add('hidden');
+            document.getElementById('btn-quiz').classList.remove('hidden');
+            document.getElementById('btn-fire').classList.add('hidden');
+
+            projectiles = []; explosions = []; particles = []; floatTexts = [];
+            teams.forEach(t => { t.worms = []; t.health = 100; });
+        }
+
+        function newTurn() {
+            if (checkGameOver()) return;
+            turnChangePending = false;
+
+            // Find next team with living worms
+            let loopCount = 0;
+            do {
+                currentPlayer = (currentPlayer + 1) % totalPlayers;
+                loopCount++;
+            } while (!teams[currentPlayer].worms.some(w => !w.dead) && loopCount < totalPlayers + 1);
+
+            // If no living teams found after loop, game is over
+            if (loopCount > totalPlayers) {
+                checkGameOver();
+                return;
+            }
+
+            gameState = "PLAYING";
+            // DRASTIC WIND: Increased range from -10/+10 to -30/+30 for more challenge
+            wind = Math.floor((Math.random() * 60) - 30);
+            updateWindUI();
+
+            resetActionButtons();
+            updateHUD(); // Update HUD to highlight current player
+
+            setTimeout(() => {
+                let worm = teams[currentPlayer].worms[0];
+                if (worm) {
+                    floatTexts.push({ x: worm.x, y: worm.y - 50, text: "Sıra Sende!", life: 2, vy: -0.5 });
+                }
+            }, 500);
+
+            startTimer();
+        }
+
+        function resetActionButtons() {
+            document.getElementById('btn-quiz').classList.remove('hidden');
+            document.getElementById('btn-quiz').disabled = false;
+            document.getElementById('btn-fire').classList.add('hidden');
+        }
+
+        function updateWindUI() {
+            const windText = document.getElementById('wind-text');
+            const windIcon = document.getElementById('wind-icon');
+            if (windText && windIcon) {
+                windText.innerText = Math.abs(wind);
+                windIcon.style.transform = `rotate(${wind > 0 ? 0 : 180}deg)`;
+            }
+        }
+
+        function startTimer() {
+            clearInterval(turnInterval);
+            turnTimer = 45;
+            const el = document.getElementById('turn-timer');
+            el.innerText = turnTimer;
+            el.classList.remove('timer-warning');
+
+            turnInterval = setInterval(() => {
+                if (gameState !== "PLAYING") return;
+                turnTimer--;
+                el.innerText = turnTimer;
+
+                if (turnTimer <= 10) el.classList.add('timer-warning');
+                else el.classList.remove('timer-warning');
+
+                if (turnTimer <= 5) AudioSys.playTick();
+
+                if (turnTimer <= 0) {
+                    showComment('miss');
+                    endTurnDelayed();
+                }
+            }, 1000);
+        }
+
+        function endTurnDelayed(ms = 2000) {
+            if (turnChangePending) return;
+            turnChangePending = true;
+            clearInterval(turnInterval);
+            setTimeout(newTurn, ms);
+        }
+
+        function checkDeaths() {
+            teams.forEach(t => {
+                t.worms.forEach(w => {
+                    if (w.health <= 0 && !w.dead) {
+                        w.dead = true;
+                        w.health = 0;
+                    }
+                });
+            });
+        }
+
+        function checkGameOver() {
+            let aliveTeams = teams.filter(t => t.worms.some(w => !w.dead));
+            if (aliveTeams.length === 1) {
+                gameState = "GAME_OVER";
+                if (turnInterval) clearInterval(turnInterval);
+                document.getElementById('message-text').innerText = `${aliveTeams[0].name} KAZANDI!`;
+                document.getElementById('message-area').classList.remove('hidden');
+                document.getElementById('game-over-controls').classList.remove('hidden');
+                showComment('win');
+                return true;
+            } else if (aliveTeams.length === 0) {
+                gameState = "GAME_OVER";
+                if (turnInterval) clearInterval(turnInterval);
+                document.getElementById('message-text').innerText = 'BERABERE!';
+                document.getElementById('message-area').classList.remove('hidden');
+                document.getElementById('game-over-controls').classList.remove('hidden');
+                showComment('draw');
+                return true;
+            }
+            return false;
+        }
+
+
+        function loop(timestamp) {
+            // FPS Calculate
+            const dt = timestamp - lastTime;
+            lastTime = timestamp;
+            if (dt > 0) {
+                fps = Math.round(1000 / dt);
+                if (timestamp % 1000 < 20) {
+                    const fpsEl = document.getElementById('fps-counter');
+                    if (fpsEl) {
+                        fpsEl.innerText = fps + " FPS";
+                        fpsEl.classList.remove('hidden');
+                    }
+                }
+            }
+
+            // Clear screen
+            ctx.clearRect(0, 0, width, height);
+
+            // AUTO-FOLLOW - projectile first, then worm (unless manual pan)
+            if (manualPanTimer > 0) {
+                manualPanTimer--; // Count down
+            } else {
+                let target = null;
+
+                // Follow active projectile first
+                let activeProj = projectiles.find(p => p.active);
+                if (activeProj) {
+                    target = { x: activeProj.x, y: activeProj.y };
+                } else if (gameState === "PLAYING" && teams[currentPlayer] && teams[currentPlayer].worms[0]) {
+                    let worm = teams[currentPlayer].worms[0];
+                    if (!worm.dead) target = { x: worm.x, y: worm.y };
+                }
+
+                if (target) {
+                    let targetCamX = target.x - width / 2;
+                    let targetCamY = target.y - height / 2;
+                    cameraX += (targetCamX - cameraX) * 0.15; // Faster follow for projectile
+                    cameraY += (targetCamY - cameraY) * 0.15;
+                }
+            }
+
+            // Clamp camera to map bounds
+            cameraX = Math.max(0, Math.min(cameraX, mapWidth - width));
+            cameraY = Math.max(0, Math.min(cameraY, mapHeight - height));
+
+            // Background - Image (stretched to viewport)
+            if (skyBg.complete) {
+                ctx.drawImage(skyBg, 0, 0, width, height);
+            } else {
+                // Fallback gradient
+                const grad = ctx.createLinearGradient(0, 0, 0, height);
+                grad.addColorStop(0, "#0f172a"); grad.addColorStop(1, "#334155");
+                ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
+            }
+
+            // CAMERA OFFSET - translate all game objects
+            ctx.save();
+            ctx.translate(-cameraX, -cameraY);
+
+            // Draw Terrain Canvas (from large map)
+            ctx.drawImage(terrainCanvas, 0, 0);
+
+            // Water with reflection
+            let waterGrad = ctx.createLinearGradient(0, waterLevel, 0, mapHeight);
+            waterGrad.addColorStop(0, "rgba(56, 189, 248, 0.8)");
+            waterGrad.addColorStop(1, "rgba(3, 105, 161, 0.95)");
+            ctx.fillStyle = waterGrad;
+            ctx.fillRect(0, waterLevel, mapWidth, mapHeight - waterLevel);
+
+            // Wave line
+            ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 3; ctx.beginPath();
+            let waveOffset = Date.now() * 0.003;
+            ctx.moveTo(0, waterLevel);
+            for (let x = 0; x <= mapWidth; x += 30) ctx.lineTo(x, waterLevel + Math.sin(x * 0.03 + waveOffset) * 5);
+            ctx.stroke();
+
+            teams.forEach(t => t.worms.forEach(w => { w.update(); w.draw(); }));
+            projectiles.forEach((p, i) => { p.update(); p.draw(); if (!p.active) projectiles.splice(i, 1); });
+
+            // POWER-UPS: update, draw, spawn
+            powerups.forEach((pu, i) => { pu.update(); pu.draw(); if (!pu.active) powerups.splice(i, 1); });
+
+            // Spawn power-up every ~45 seconds (less frequent)
+            if (gameState === "PLAYING") {
+                powerupTimer++;
+                if (powerupTimer > 2700) {
+                    spawnPowerUp();
+                    powerupTimer = 0;
+                }
+            }
+
+            explosions.forEach((e, i) => {
+                e.r += 3;
+                const progress = e.r / e.maxR;
+
+                // Glowing 3D explosion with lighter blend
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+
+                // Outer glow
+                let outerGrad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r);
+                outerGrad.addColorStop(0, `rgba(255, 200, 50, ${0.8 * (1 - progress)})`);
+                outerGrad.addColorStop(0.5, `rgba(255, 100, 0, ${0.5 * (1 - progress)})`);
+                outerGrad.addColorStop(1, `rgba(80, 20, 0, 0)`);
+                ctx.fillStyle = outerGrad;
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+
+                // Inner white-hot core
+                if (progress < 0.6) {
+                    let coreGrad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r * 0.5);
+                    coreGrad.addColorStop(0, `rgba(255, 255, 255, ${1 - progress})`);
+                    coreGrad.addColorStop(0.5, `rgba(255, 255, 100, ${0.8 - progress})`);
+                    coreGrad.addColorStop(1, `rgba(255, 150, 0, 0)`);
+                    ctx.fillStyle = coreGrad;
+                    ctx.beginPath(); ctx.arc(e.x, e.y, e.r * 0.5, 0, Math.PI * 2); ctx.fill();
+                }
+                ctx.restore();
+
+                if (e.r > e.maxR) explosions.splice(i, 1);
+            });
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.03;
+                ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 1; if (p.life <= 0) particles.splice(i, 1);
+            });
+            floatTexts.forEach((ft, i) => {
+                ft.y += ft.vy; ft.life -= 0.02;
+                ctx.save(); ctx.font = "bold 20px Fredoka One";
+                ctx.fillStyle = `rgba(255, 255, 0, ${ft.life})`; ctx.strokeStyle = `rgba(0, 0, 0, ${ft.life})`; ctx.lineWidth = 3;
+                ctx.strokeText(ft.text, ft.x, ft.y); ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore(); if (ft.life <= 0) floatTexts.splice(i, 1);
+            });
+
+            // Restore camera offset
+            ctx.restore();
+
+            requestAnimationFrame(loop);
+        }
+
+        // --- CONTROLS ---
+        function setupControls() {
+            // CAMERA PAN - Mouse drag (right-click)
+            canvas.addEventListener('mousedown', (e) => {
+                if (e.button === 2) { // Right-click drag
+                    isDragging = true;
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                    manualPanTimer = 120; // Pause auto-follow for 2 sec
+                    e.preventDefault();
+                }
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    cameraX -= e.clientX - lastMouseX;
+                    cameraY -= e.clientY - lastMouseY;
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                    manualPanTimer = 120; // Reset timer while dragging
+                }
+            });
+            canvas.addEventListener('mouseup', () => isDragging = false);
+            canvas.addEventListener('mouseleave', () => isDragging = false);
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault()); // Disable right-click menu
+
+            // CAMERA PAN - Single finger touch drag
+            let lastTouchX = 0, lastTouchY = 0;
+            let touchPanning = false;
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    touchPanning = true;
+                    lastTouchX = e.touches[0].clientX;
+                    lastTouchY = e.touches[0].clientY;
+                    manualPanTimer = 120;
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchmove', (e) => {
+                if (touchPanning && e.touches.length === 1) {
+                    let tx = e.touches[0].clientX;
+                    let ty = e.touches[0].clientY;
+                    cameraX -= tx - lastTouchX;
+                    cameraY -= ty - lastTouchY;
+                    lastTouchX = tx;
+                    lastTouchY = ty;
+                    manualPanTimer = 120;
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchend', () => touchPanning = false);
+
+            // Touch / Mouse for UI buttons
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+            const btnJump = document.getElementById('btn-jump');
+            const btnAimUp = document.getElementById('btn-aim-up');
+            const btnAimDown = document.getElementById('btn-aim-down');
+            const btnQuiz = document.getElementById('btn-quiz');
+            const btnFire = document.getElementById('btn-fire');
+
+            // Movement with interval for CONTINUOUS movement while held
+            let moveInterval = null;
+
+            const startMove = (dir) => {
+                moveDir = dir;
+                const w = teams[currentPlayer].worms[0];
+                if (!w || w.dead || gameState !== "PLAYING") return;
+
+                // RESTRICTED MOVEMENT: Allow subtle air control
+                if (!w.grounded) {
+                    w.vx += dir * 0.2; // Small nudge (Increased from 0.15)
+                    return;
+                }
+
+                w.setFacing(dir);
+
+                // Clear any existing interval
+                if (moveInterval) clearInterval(moveInterval);
+
+                // Continuous movement while button held
+                moveInterval = setInterval(() => {
+                    const w = teams[currentPlayer].worms[0];
+                    if (!w || w.dead || gameState !== "PLAYING") {
+                        clearInterval(moveInterval);
+                        moveInterval = null;
+                        return;
+                    }
+                    w.vx = moveDir * 3;
+                }, 50);
+            };
+
+            const stopMove = () => {
+                if (moveInterval) {
+                    clearInterval(moveInterval);
+                    moveInterval = null;
+                }
+                moveDir = 0;
+            };
+
+            btnLeft.addEventListener('touchstart', (e) => { startMove(-1); }, { passive: true });
+            btnLeft.addEventListener('touchend', () => { stopMove(); }, { passive: true });
+            btnLeft.addEventListener('mousedown', (e) => { startMove(-1); });
+            btnLeft.addEventListener('mouseup', () => { stopMove(); });
+            btnLeft.addEventListener('mouseleave', () => { stopMove(); });
+
+            btnRight.addEventListener('touchstart', (e) => { startMove(1); }, { passive: true });
+            btnRight.addEventListener('touchend', () => { stopMove(); }, { passive: true });
+            btnRight.addEventListener('mousedown', (e) => { startMove(1); });
+            btnRight.addEventListener('mouseup', () => { stopMove(); });
+            btnRight.addEventListener('mouseleave', () => { stopMove(); });
+
+            // Jump - STRICTLY LIMITED
+            const doJump = () => {
+                const w = teams[currentPlayer].worms[0];
+                if (w && w.grounded && gameState === "PLAYING") {
+                    w.vy = -8.0; // Increased jump power for small heights (from -7.0)
+                    w.grounded = false;
+                    const facingDir = Math.cos(w.angle) > 0 ? 1 : -1;
+                    // ADVANCE JUMP: Jump gives a horizontal boost
+                    w.vx = facingDir * 5;
+                    AudioSys.playJump();
+                }
+            };
+
+            btnJump.addEventListener('touchstart', doJump, { passive: true });
+            btnJump.addEventListener('mousedown', doJump);
+
+            // Aiming - ULTRA PRECISE (1 degree steps)
+            let aimInterval = null;
+            const aim = (delta) => {
+                const w = teams[currentPlayer].worms[0];
+                if (!w || gameState !== "PLAYING") return;
+                w.aimAngle += delta;
+            };
+
+            const AIM_STEP = 0.0349; // Faster aiming: 2 degree steps
+
+            // Helper to start aiming
+            const startAiming = (delta) => {
+                if (aimInterval) clearInterval(aimInterval);
+                aim(delta); // Immediate step
+                aimInterval = setInterval(() => aim(delta), 60);
+            };
+
+            const stopAiming = () => {
+                if (aimInterval) {
+                    clearInterval(aimInterval);
+                    aimInterval = null;
+                }
+            };
+
+            // AIM UP
+            btnAimUp.addEventListener('mousedown', () => startAiming(-AIM_STEP));
+            btnAimUp.addEventListener('mouseup', stopAiming);
+            btnAimUp.addEventListener('mouseleave', stopAiming);
+            btnAimUp.addEventListener('touchstart', (e) => { e.preventDefault(); startAiming(-AIM_STEP); }, { passive: false });
+            btnAimUp.addEventListener('touchend', stopAiming);
+            btnAimUp.addEventListener('touchcancel', stopAiming);
+
+            // AIM DOWN
+            btnAimDown.addEventListener('mousedown', () => startAiming(AIM_STEP));
+            btnAimDown.addEventListener('mouseup', stopAiming);
+            btnAimDown.addEventListener('mouseleave', stopAiming);
+            btnAimDown.addEventListener('touchstart', (e) => { e.preventDefault(); startAiming(AIM_STEP); }, { passive: false });
+            btnAimDown.addEventListener('touchend', stopAiming);
+            btnAimDown.addEventListener('touchcancel', stopAiming);
+
+            // Quiz
+            btnQuiz.addEventListener('click', () => {
+                if (gameState !== "PLAYING") return;
+                openMathModal();
+            });
+
+            // Fire (Hold) - MUCH SLOWER power bar
+            const startCharge = (e) => {
+                if (e.cancelable) e.preventDefault();
+                if (gameState !== "PLAYING" || document.getElementById('btn-fire').classList.contains('hidden')) return;
+                isPowering = true; power = 0; powerDir = 2.0; // Faster power charge (0.8 -> 2.0)
+                document.getElementById('power-container').classList.remove('hidden');
+                chargeLoop();
+            };
+
+            const endCharge = (e) => {
+                if (e.cancelable) e.preventDefault();
+                if (!isPowering) return;
+                isPowering = false;
+                document.getElementById('power-container').classList.add('hidden');
+                fireProjectile();
+            };
+
+            btnFire.addEventListener('mousedown', startCharge);
+            btnFire.addEventListener('touchstart', startCharge);
+            btnFire.addEventListener('mouseup', endCharge);
+            btnFire.addEventListener('touchend', endCharge);
+
+            // Keyboard
+            window.addEventListener('keydown', (e) => {
+                if (gameState !== "PLAYING") return;
+                const w = teams[currentPlayer].worms[0];
+                if (!w) return;
+
+                if (e.key === 'ArrowLeft' && w.grounded) { w.vx = -2; w.setFacing(-1); }
+                if (e.key === 'ArrowRight' && w.grounded) { w.vx = 2; w.setFacing(1); }
+                if (e.key === 'ArrowUp') aim(-AIM_STEP);
+                if (e.key === 'ArrowDown') aim(AIM_STEP);
+                if (e.key === ' ') {
+                    if (w.grounded) { w.vy = -6; w.grounded = false; AudioSys.playJump(); }
+                }
+                if (e.key === 'Enter') {
+                    if (document.getElementById('btn-fire').classList.contains('hidden')) {
+                        openMathModal();
+                    } else {
+                        // Simulate Fire Key (Charge) logic needs keyup/down separation or simple toggle
+                    }
+                }
+            });
+        }
+
+        function chargeLoop() {
+            if (!isPowering) return;
+            power += powerDir;
+            if (power >= 100 || power <= 0) powerDir *= -1;
+            document.getElementById('power-fill').style.width = power + "%";
+            AudioSys.playCharge(power);
+            requestAnimationFrame(chargeLoop);
+        }
+
+        function fireProjectile() {
+            const w = teams[currentPlayer].worms[0];
+            if (!w) return;
+
+            gameState = "FIRE_ANIM";
+            document.getElementById('btn-fire').classList.add('hidden'); // Hide fire button
+            AudioSys.playShoot();
+
+            const lookDir = Math.cos(w.angle) > 0 ? 1 : -1;
+            let px = w.x;
+            let py = w.y - 20;
+
+            // Power logic: 0 power = 0 move, 100 power = max move
+            let projectileForce = (power / 100) * 12;
+            projectiles.push(new Projectile(px, py, w.aimAngle, projectileForce));
+        }
+
+        // --- MATH UI LOGIC ---
+        function openMathModal() {
+            const modal = document.getElementById('math-modal');
+            const qObj = generateQuestion();
+            document.getElementById('question-text').innerText = qObj.q;
+            const grid = document.getElementById('answers-grid');
+            grid.innerHTML = '';
+            modal.classList.remove('hidden');
+
+            qObj.options.forEach(opt => {
+                let btn = document.createElement('button');
+                btn.className = "p-4 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-lg border border-gray-600 shadow-md text-lg transition-transform active:scale-95";
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    modal.classList.add('hidden');
+                    if (opt === qObj.a) {
+                        AudioSys.playCorrect();
+                        document.getElementById('btn-quiz').classList.add('hidden');
+                        document.getElementById('btn-fire').classList.remove('hidden');
+                        showComment('start'); // Positive feedback
+                    } else {
+                        AudioSys.playWrong();
+                        showComment('miss');
+                        endTurnDelayed(1000);
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        // --- GAME FLOW HELPERS ---
+        // startTimer is already defined above
+        // updateHUD is already defined above
+        // updateWindUI is already defined above
+        // endTurnDelayed is already defined above
+        // checkDeaths is already defined above
+        // checkGameOver is already defined above
+        // createSplash is already defined above
+
+        // --- GAME FLOW FUNCTIONS ---
+        window.startGame = function (numPlayers) {
+            totalPlayers = numPlayers;
+            teams = [];
+            projectiles = [];
+            explosions = [];
+            particles = [];
+            floatTexts = [];
+            currentPlayer = 0;
+
+            // Reset used questions for new game
+            usedQuestions.clear();
+
+            // Init Audio
+            AudioSys.init();
+
+            // Generate new map
+            generateMap();
+
+            // Create teams with distributed spawn positions
+            for (let i = 0; i < totalPlayers; i++) {
+                let spawnX = getSafeSpawnX(i, totalPlayers);
+                let worm = new Worm(spawnX, i);
+                teams.push({
+                    name: teamConfigs[i].name,
+                    color: teamConfigs[i].color,
+                    bodyColor: teamConfigs[i].body,
+                    outline: teamConfigs[i].outline,
+                    bgClass: teamConfigs[i].bg, // Ensure bgClass is set for new HUD
+                    worms: [worm]
+                });
+            }
+
+            // Start game
+            gameState = "PLAYING";
+            // Random initial wind (reduced range)
+            wind = (Math.random() - 0.5) * 30;
+            updateWindUI();
+            setupHUD(); // Call setupHUD once to create initial elements
+            updateHUD(); // Then update to reflect current state
+            newTurn(); // Start the first turn
+            showComment('start');
+        };
+
+        // goToMenu is already defined above with correct menu-screen reference
+
+        // Start Init
+        init();
+
+    </script>
+</body>
+
+</html>
+```

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Matematik Ligi - Pac-Man</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <div id="game-wrapper">
+        <div id="game-container">
+            <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+            <!-- UI Katmanı -->
+            <div id="ui-layer">
+                <div class="stat-group">
+                    <span class="stat-label">PUAN</span>
+                    <div class="stat-box"><span id="score">0</span></div>
+                </div>
+                <div class="stat-group center-info">
+                    <span class="stat-label" id="current-info-label">5. SINIF</span>
+                    <div class="topic-display" id="current-topic-label">Genel</div>
+                </div>
+                <div class="stat-group">
+                    <span class="stat-label">CAN</span>
+                    <div class="stat-box lives-box" id="lives-display">❤️❤️❤️</div>
+                </div>
+            </div>
+
+            <div id="player-name-display"></div>
+            <div id="notification"></div>
+
+            <!-- 1. Giriş Ekranı (İsim) -->
+            <div id="start-screen" class="screen">
+                <div class="school-name">MACİDE GAZİOĞLU KÜKÜRTLÜ ORTAOKULU</div>
+                <h1>MATEMATİK<br>LİGİ</h1>
+                <p class="subtitle">PAC-MAN EĞİTİM OYUNU</p>
+                <input type="text" id="player-name-input" placeholder="İSMİNİZİ GİRİN" maxlength="15"
+                    autocomplete="off">
+                <button class="btn-primary btn-start" onclick="goToClasses()">BAŞLA</button>
+
+                <div id="leaderboard">
+                    <div class="leaderboard-title">🏆 EN İYİLER 🏆</div>
+                    <div id="scores-list"></div>
+                </div>
+                <div class="author-name">ALPER TEYMUR</div>
+            </div>
+
+            <!-- 2. Sınıf Seçme Ekranı -->
+            <div id="class-screen" class="screen" style="display: none;">
+                <h2>SINIFINI SEÇ</h2>
+                <div class="grid-container" id="class-grid"></div>
+                <button class="btn-secondary btn-back" onclick="showScreen('start-screen')">GERİ DÖN</button>
+            </div>
+
+            <!-- 3. Konu Seçme Ekranı -->
+            <div id="topic-screen" class="screen" style="display: none;">
+                <h2 id="topic-title">KONU SEÇ</h2>
+                <div class="grid-container topics" id="topic-grid"></div>
+                <button class="btn-secondary btn-back" onclick="showScreen('class-screen')">GERİ DÖN</button>
+            </div>
+
+            <!-- Zorluk otomatik artar - bu ekran kaldırıldı -->
+
+            <!-- Soru Modalı -->
+            <div id="math-modal">
+                <h2 class="modal-title">🧠 BİLGİNİ GÖSTER! 🧠</h2>
+                <div id="timer-bar-container">
+                    <div id="timer-bar"></div>
+                </div>
+                <div id="timer-text">20 sn</div>
+                <div id="question-text">Soru buraya gelecek...</div>
+                <div class="options-grid" id="options-container"></div>
+                <div id="feedback-modal"></div>
+            </div>
+
+            <!-- Oyun Bitti Ekranı -->
+            <div id="game-over-screen" class="screen" style="display: none;">
+                <h1 class="game-over-title">OYUN BİTTİ</h1>
+                <p class="final-score-text">TOPLAM PUAN: <span id="final-score">0</span></p>
+                <div id="final-leaderboard">
+                    <div class="leaderboard-title">🏆 EN İYİLER 🏆</div>
+                    <div id="final-scores-list"></div>
+                </div>
+                <button class="btn-primary btn-start" onclick="goToMenu()">TEKRAR OYNA</button>
+            </div>
+
+            <!-- Oyun İçi Menü Butonu -->
+            <button id="game-menu-btn" onclick="goToMenu()" style="display:none;">MENÜ</button>
+
+            <!-- D-PAD Kontroller (Yarı Saydam) -->
+            <div id="dpad-container" style="display:none;">
+                <div class="dpad-btn" id="dpad-up" onpointerdown="handleDpad('ArrowUp')">▲</div>
+                <div class="dpad-btn" id="dpad-left" onpointerdown="handleDpad('ArrowLeft')">◀</div>
+                <div class="dpad-btn" id="dpad-down" onpointerdown="handleDpad('ArrowDown')">▼</div>
+                <div class="dpad-btn" id="dpad-right" onpointerdown="handleDpad('ArrowRight')">▶</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game.js"></script>
+</body>
+
+</html>

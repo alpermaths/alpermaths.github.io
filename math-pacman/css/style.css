@@ -1,0 +1,642 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka+One&family=Roboto:wght@400;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: 'Roboto', sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* --- GAME WRAPPER & CONTAINER --- */
+#game-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0f 100%);
+}
+
+#game-container {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    background: #000;
+    border: 8px solid #2121DE;
+    border-radius: 20px;
+    box-shadow:
+        0 0 30px rgba(33, 33, 222, 0.5),
+        0 0 60px rgba(33, 33, 222, 0.3),
+        inset 0 0 30px rgba(33, 33, 222, 0.1);
+    transform-origin: center center;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* --- UI LAYER --- */
+/* --- UI LAYER --- */
+#ui-layer {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    padding: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.stat-group {
+    background: rgba(0, 0, 0, 0.5);
+    /* Yarı saydam */
+    border: 2px solid rgba(33, 33, 222, 0.4);
+    border-radius: 12px;
+    padding: 8px 15px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.stat-group:hover {
+    opacity: 1;
+}
+
+.stat-group.center-info {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    box-shadow: none;
+}
+
+.stat-label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    color: #FFD700;
+    text-shadow: 2px 2px 0 #000;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.stat-box {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 28px;
+    color: #FFF;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.lives-box {
+    font-size: 24px;
+    letter-spacing: 5px;
+}
+
+.topic-display {
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    color: #00FFFF;
+}
+
+#player-name-display {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    color: #888;
+    z-index: 10;
+}
+
+/* --- NOTIFICATION --- */
+#notification {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 48px;
+    color: #FF0000;
+    text-shadow: 4px 4px 0 #000, 0 0 20px #FF0000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 20;
+    white-space: nowrap;
+}
+
+/* --- SCREENS --- */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0f 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    text-align: center;
+    padding: 20px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.school-name {
+    font-family: 'Roboto', sans-serif;
+    font-size: 18px;
+    color: #4DB6AC;
+    letter-spacing: 2px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px black;
+    margin-bottom: 5px;
+}
+
+h1 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 48px;
+    color: #FFFF00;
+    text-shadow:
+        4px 4px 0 #E65100,
+        0 0 30px rgba(255, 255, 0, 0.5);
+    margin: 10px 0;
+    line-height: 1.3;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 6px 6px 0 #E65100, 0 0 20px rgba(255, 255, 0, 0.3);
+    }
+
+    to {
+        text-shadow: 6px 6px 0 #E65100, 0 0 40px rgba(255, 255, 0, 0.7);
+    }
+}
+
+h2 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 36px;
+    color: #FFFF00;
+    text-shadow: 4px 4px 0 #000;
+    margin-bottom: 40px;
+}
+
+.subtitle {
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: #00FFFF;
+    margin-bottom: 20px;
+    text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+.author-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    color: #FF7043;
+    margin-top: 15px;
+    text-shadow: 2px 2px 0 #000;
+}
+
+/* --- INPUT & BUTTONS --- */
+#player-name-input {
+    padding: 20px 30px;
+    font-size: 28px;
+    border-radius: 15px;
+    border: 4px solid #FFFF00;
+    background: rgba(0, 0, 0, 0.8);
+    color: #FFFF00;
+    font-family: 'Press Start 2P', cursive;
+    text-align: center;
+    width: 450px;
+    margin-bottom: 25px;
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
+}
+
+#player-name-input::placeholder {
+    color: #666;
+}
+
+#player-name-input:focus {
+    outline: none;
+    box-shadow: 0 0 25px rgba(255, 255, 0, 0.6);
+}
+
+.btn-primary {
+    padding: 22px 50px;
+    font-size: 24px;
+    color: #000;
+    background: linear-gradient(to bottom, #FFFF00, #FFD700);
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', cursive;
+    box-shadow: 0 8px 0 #B8860B, 0 0 20px rgba(255, 255, 0, 0.4);
+    transition: all 0.1s;
+    min-width: 200px;
+}
+
+.btn-primary:active {
+    transform: translateY(6px);
+    box-shadow: 0 2px 0 #B8860B;
+}
+
+.btn-secondary {
+    padding: 15px 30px;
+    font-size: 16px;
+    color: #FFF;
+    background: rgba(100, 100, 100, 0.5);
+    border: 3px solid #666;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', cursive;
+    margin-top: 20px;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: rgba(100, 100, 100, 0.8);
+    border-color: #888;
+}
+
+.btn-start {
+    font-size: 28px;
+    padding: 25px 60px;
+}
+
+.btn-back {
+    margin-top: 30px;
+}
+
+/* Color variants */
+.btn-easy {
+    background: linear-gradient(to bottom, #2ECC71, #27AE60);
+    color: #FFF;
+    box-shadow: 0 8px 0 #1E8449, 0 0 20px rgba(46, 204, 113, 0.4);
+}
+
+.btn-medium {
+    background: linear-gradient(to bottom, #F39C12, #D35400);
+    color: #FFF;
+    box-shadow: 0 8px 0 #A04000, 0 0 20px rgba(243, 156, 18, 0.4);
+}
+
+.btn-hard {
+    background: linear-gradient(to bottom, #E74C3C, #C0392B);
+    color: #FFF;
+    box-shadow: 0 8px 0 #922B21, 0 0 20px rgba(231, 76, 60, 0.4);
+}
+
+/* --- GRID CONTAINERS --- */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin-top: 20px;
+    max-width: 800px;
+}
+
+.grid-container.topics {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1000px;
+}
+
+.difficulty-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.class-btn,
+.topic-btn {
+    padding: 30px 40px;
+    font-size: 22px;
+    color: #FFF;
+    background: linear-gradient(to bottom, #2121DE, #1818A0);
+    border: 4px solid #4040FF;
+    border-radius: 15px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', cursive;
+    box-shadow: 0 6px 0 #0D0D50, 0 0 20px rgba(33, 33, 222, 0.4);
+    transition: all 0.1s;
+    min-width: 180px;
+}
+
+.class-btn:active,
+.topic-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #0D0D50;
+}
+
+.topic-btn {
+    font-size: 16px;
+    padding: 25px 20px;
+    min-width: 150px;
+}
+
+/* --- LEADERBOARD --- */
+#leaderboard,
+#final-leaderboard {
+    margin-top: 25px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px 30px;
+    border-radius: 15px;
+    border: 3px solid #FFD700;
+    width: 450px;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.leaderboard-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 18px;
+    color: #FFD700;
+    margin-bottom: 15px;
+}
+
+.score-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+    color: #CCC;
+}
+
+.score-row:first-child {
+    color: #FFD700;
+    font-size: 22px;
+}
+
+/* --- MATH MODAL --- */
+#math-modal {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 1100px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+    border: 6px solid #FFFF00;
+    border-radius: 25px;
+    padding: 30px 40px;
+    text-align: center;
+    box-shadow:
+        0 0 50px rgba(255, 255, 0, 0.4),
+        inset 0 0 30px rgba(255, 255, 0, 0.1);
+    z-index: 200;
+    animation: modalPop 0.3s ease-out;
+}
+
+@keyframes modalPop {
+    from {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 28px;
+    color: #FFFF00;
+    margin-bottom: 20px;
+    text-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+}
+
+#timer-bar-container {
+    width: 100%;
+    height: 20px;
+    background: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #555;
+    margin-bottom: 10px;
+}
+
+#timer-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(to right, #27AE60, #2ECC71);
+    transition: width 0.1s linear;
+}
+
+#timer-text {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 18px;
+    color: #E74C3C;
+    margin-bottom: 15px;
+}
+
+#question-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: 42px;
+    color: #FFF;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    border-radius: 15px;
+    border: 3px solid #2121DE;
+    margin-bottom: 25px;
+    line-height: 1.3;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.option-btn {
+    padding: 25px 20px;
+    font-size: 32px;
+    font-family: 'Fredoka One', cursive;
+    color: #FFF;
+    background: linear-gradient(to bottom, #2121DE, #1818A0);
+    border: 4px solid #4040FF;
+    border-radius: 15px;
+    cursor: pointer;
+    box-shadow: 0 8px 0 #0D0D50;
+    transition: all 0.1s;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.option-btn:active {
+    transform: translateY(6px);
+    box-shadow: 0 2px 0 #0D0D50;
+}
+
+.option-btn:disabled {
+    background: #444;
+    border-color: #555;
+    color: #777;
+    box-shadow: none;
+    transform: translateY(6px);
+}
+
+.option-btn.correct {
+    background: linear-gradient(to bottom, #27AE60, #1E8449);
+    border-color: #2ECC71;
+}
+
+.option-btn.wrong {
+    background: linear-gradient(to bottom, #C0392B, #922B21);
+    border-color: #E74C3C;
+}
+
+#feedback-modal {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 28px;
+    margin-top: 15px;
+    height: 40px;
+}
+
+/* --- GAME OVER SCREEN --- */
+.game-over-title {
+    color: #E74C3C !important;
+    text-shadow: 6px 6px 0 #000, 0 0 30px rgba(231, 76, 60, 0.5) !important;
+}
+
+.final-score-text {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 32px;
+    color: #FFD700;
+    margin: 20px 0 30px 0;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+/* --- OYUN İÇİ MENÜ BUTONU --- */
+#game-menu-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 30px;
+    padding: 12px 25px;
+    font-size: 16px;
+    font-family: 'Press Start 2P', cursive;
+    color: #FFF;
+    background: rgba(50, 50, 50, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    cursor: pointer;
+    z-index: 50;
+    opacity: 0.7;
+    transition: all 0.2s;
+}
+
+#game-menu-btn:hover {
+    opacity: 1;
+    background: rgba(100, 100, 100, 0.8);
+}
+
+/* --- D-PAD (Yarı Saydam) --- */
+#dpad-container {
+    position: absolute;
+    bottom: 20px;
+    right: 30px;
+    display: grid;
+    grid-template-columns: 60px 60px 60px;
+    grid-template-rows: 60px 60px;
+    gap: 8px;
+    z-index: 50;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+#dpad-container:hover,
+#dpad-container:active {
+    opacity: 0.8;
+}
+
+.dpad-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 0, 0.15);
+    border: 2px solid rgba(255, 255, 0, 0.3);
+    border-radius: 12px;
+    font-size: 28px;
+    color: rgba(255, 255, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.1s;
+}
+
+.dpad-btn:active {
+    background: rgba(255, 255, 0, 0.5);
+    color: #FFFF00;
+    transform: scale(0.92);
+}
+
+#dpad-up {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+#dpad-left {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+#dpad-down {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+#dpad-right {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+/* --- RESPONSIVE SCALING --- */
+@media (max-width: 1400px) {
+    #game-container {
+        transform: scale(0.9);
+    }
+}
+
+@media (max-width: 1200px) {
+    #game-container {
+        transform: scale(0.75);
+    }
+}
+
+@media (max-width: 900px) {
+    #game-container {
+        transform: scale(0.55);
+    }
+}

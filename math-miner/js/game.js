@@ -1,12 +1,12 @@
 // --- 1. GLOBAL DEĞİŞKENLER VE YAPILANDIRMA ---
 const WIDTH = 1366, HEIGHT = 768, ORIGIN_X = WIDTH / 2, SKY_HEIGHT = 180, ORIGIN_Y = SKY_HEIGHT - 50, MIN_ROPE = 70;
 
-// Konular ve Müfredat
+// Konular ve Müfredat (Genişletilmiş)
 const curriculum = {
-    "5. SINIF": ["Doğal Sayılar", "Kesirler", "Ondalık Gösterim", "Yüzdeler"],
-    "6. SINIF": ["Çarpanlar ve Katlar", "Tam Sayılar", "Kesirlerle İşlemler", "Ondalık Gösterim"],
-    "7. SINIF": ["Tam Sayılar", "Rasyonel Sayılar", "Cebirsel İfadeler", "Denklemler", "Yüzdeler"],
-    "8. SINIF": ["Çarpanlar ve Katlar", "Üslü İfadeler", "Kareköklü İfadeler", "Olasılık"]
+    "5. SINIF": ["Doğal Sayılar", "Kesirler", "Geometrik Şekiller", "Çevre ve Alan"],
+    "6. SINIF": ["Tam Sayılar", "Kesirler", "Oran-Orantı", "Denklem", "Açılar", "Hacim"],
+    "7. SINIF": ["Rasyonel Sayılar", "Cebirsel İfadeler", "Denklemler", "Oran ve Orantı", "Yüzdeler", "Dörtgenler", "Çember ve Daire"],
+    "8. SINIF": ["Üslü İfadeler", "Kareköklü İfadeler", "Özdeşlikler", "Çarpanlara Ayırma", "Olasılık", "Denklemler", "Üçgenler", "Eşitsizlikler"]
 };
 
 // Oyun Durumu
@@ -222,103 +222,319 @@ const generateWrongOptions = (correct, isInt = true) => {
     return Array.from(opts).sort(() => Math.random() - 0.5);
 };
 
+// SORU BANKALARI (Statik sorular - çeşitlilik için)
+const questionBanks = {
+    "5. SINIF": {
+        "Doğal Sayılar": [
+            { q: "24 + 36 = ?", a: "60", d: ["50", "70", "56"] },
+            { q: "85 - 27 = ?", a: "58", d: ["62", "52", "68"] },
+            { q: "12 × 5 = ?", a: "60", d: ["55", "65", "50"] },
+            { q: "72 ÷ 8 = ?", a: "9", d: ["8", "7", "6"] },
+            { q: "15 × 4 = ?", a: "60", d: ["45", "55", "65"] },
+            { q: "8 × 7 = ?", a: "56", d: ["54", "48", "63"] },
+            { q: "81 ÷ 9 = ?", a: "9", d: ["8", "7", "10"] },
+            { q: "11 × 11 = ?", a: "121", d: ["111", "131", "122"] },
+            { q: "9 × 9 = ?", a: "81", d: ["72", "90", "79"] }
+        ],
+        "Kesirler": [
+            { q: "1/2 + 1/2 = ?", a: "1", d: ["2", "1/4", "2/4"] },
+            { q: "3/4 + 1/4 = ?", a: "1", d: ["4/8", "2/4", "1/2"] },
+            { q: "1/2 + 1/4 = ?", a: "3/4", d: ["2/6", "1/6", "2/4"] },
+            { q: "2/3 + 1/3 = ?", a: "1", d: ["3/6", "3/3", "2/3"] },
+            { q: "1 tam = kaç yarım?", a: "2", d: ["1", "3", "4"] }
+        ],
+        "Geometrik Şekiller": [
+            { q: "Üçgenin kaç kenarı var?", a: "3", d: ["4", "5", "2"] },
+            { q: "Karenin kaç köşesi var?", a: "4", d: ["3", "5", "6"] },
+            { q: "Üçgenin iç açıları toplamı?", a: "180°", d: ["360°", "90°", "270°"] },
+            { q: "Karede tüm açılar kaç derece?", a: "90", d: ["60", "45", "180"] }
+        ],
+        "Çevre ve Alan": [
+            { q: "Kenarı 5 cm olan karenin çevresi?", a: "20 cm", d: ["25 cm", "15 cm", "10 cm"] },
+            { q: "Kenarı 4 cm olan karenin alanı?", a: "16 cm²", d: ["8 cm²", "12 cm²", "20 cm²"] },
+            { q: "5×3 dikdörtgenin alanı?", a: "15 cm²", d: ["16 cm²", "8 cm²", "18 cm²"] }
+        ]
+    },
+    "6. SINIF": {
+        "Tam Sayılar": [
+            { q: "(-5) + 3 = ?", a: "-2", d: ["2", "-8", "8"] },
+            { q: "(-7) + (-4) = ?", a: "-11", d: ["11", "-3", "3"] },
+            { q: "(-6) × 2 = ?", a: "-12", d: ["12", "-8", "8"] },
+            { q: "(-3) × (-4) = ?", a: "12", d: ["-12", "7", "-7"] },
+            { q: "(-20) ÷ (-4) = ?", a: "5", d: ["-5", "4", "-4"] },
+            { q: "|−7| = ?", a: "7", d: ["-7", "0", "1"] }
+        ],
+        "Kesirler": [
+            { q: "2/3 + 1/6 = ?", a: "5/6", d: ["3/9", "3/6", "1/2"] },
+            { q: "3/4 - 1/2 = ?", a: "1/4", d: ["2/4", "1/2", "2/2"] },
+            { q: "1/2 ÷ 1/4 = ?", a: "2", d: ["1/8", "4", "1/2"] }
+        ],
+        "Oran-Orantı": [
+            { q: "4:6 oranını sadeleştir", a: "2:3", d: ["1:2", "3:4", "4:6"] },
+            { q: "12'nin 3/4'ü kaçtır?", a: "9", d: ["8", "6", "10"] },
+            { q: "20'nin %25'i kaçtır?", a: "5", d: ["4", "6", "10"] }
+        ],
+        "Denklem": [
+            { q: "x + 5 = 12 ise x = ?", a: "7", d: ["5", "17", "6"] },
+            { q: "2x = 14 ise x = ?", a: "7", d: ["6", "8", "28"] },
+            { q: "3x + 2 = 11 ise x = ?", a: "3", d: ["4", "2", "5"] }
+        ],
+        "Açılar": [
+            { q: "Dik açı kaç derece?", a: "90°", d: ["180°", "45°", "360°"] },
+            { q: "Doğru açı kaç derece?", a: "180°", d: ["90°", "360°", "270°"] },
+            { q: "60°'nin bütünleyeni kaç derece?", a: "120°", d: ["30°", "60°", "90°"] }
+        ],
+        "Hacim": [
+            { q: "2×3×4 küpün hacmi?", a: "24", d: ["9", "14", "36"] },
+            { q: "Kenarı 3 cm küpün hacmi?", a: "27 cm³", d: ["9 cm³", "18 cm³", "81 cm³"] }
+        ]
+    },
+    "7. SINIF": {
+        "Rasyonel Sayılar": [
+            { q: "-3/4 + 1/4 = ?", a: "-1/2", d: ["-2/4", "1/2", "-1/4"] },
+            { q: "(-1/2) ÷ (1/4) = ?", a: "-2", d: ["2", "-1/8", "1/8"] },
+            { q: "-0.5 + 0.3 = ?", a: "-0.2", d: ["0.2", "-0.8", "0.8"] },
+            { q: "|-3/5| = ?", a: "3/5", d: ["-3/5", "5/3", "-5/3"] },
+            { q: "0.75 hangi kesir?", a: "3/4", d: ["2/3", "4/5", "7/10"] }
+        ],
+        "Cebirsel İfadeler": [
+            { q: "3x + 2x = ?", a: "5x", d: ["6x", "5x²", "x"] },
+            { q: "2x × 3x = ?", a: "6x²", d: ["5x", "6x", "5x²"] },
+            { q: "2(x + 3) = ?", a: "2x + 6", d: ["2x + 3", "x + 6", "2x + 5"] },
+            { q: "x × x × x = ?", a: "x³", d: ["3x", "x + 3", "3x²"] }
+        ],
+        "Denklemler": [
+            { q: "3x - 5 = 10 ise x = ?", a: "5", d: ["15", "3", "-5"] },
+            { q: "2(x + 4) = 14 ise x = ?", a: "3", d: ["7", "5", "11"] },
+            { q: "-2x + 8 = 0 ise x = ?", a: "4", d: ["-4", "2", "-2"] }
+        ],
+        "Oran ve Orantı": [
+            { q: "6:9 oranını sadeleştir", a: "2:3", d: ["3:4", "1:2", "6:9"] },
+            { q: "24'ün 3/4'ü kaçtır?", a: "18", d: ["16", "12", "20"] },
+            { q: "50'nin %20'si kaçtır?", a: "10", d: ["25", "5", "20"] }
+        ],
+        "Yüzdeler": [
+            { q: "120'nin %50'si kaçtır?", a: "60", d: ["50", "70", "24"] },
+            { q: "80'in %25'i kaçtır?", a: "20", d: ["16", "25", "40"] },
+            { q: "Fiyatı %10 artan 100 TL kaç olur?", a: "110", d: ["10", "90", "101"] }
+        ],
+        "Dörtgenler": [
+            { q: "Paralelkenarın karşı açıları?", a: "Eşit", d: ["Farklı", "90°", "Bütünler"] },
+            { q: "Karenin tüm açıları?", a: "90°", d: ["60°", "45°", "120°"] },
+            { q: "Yamuğun kaç kenarı paralel?", a: "2", d: ["0", "4", "1"] }
+        ],
+        "Çember ve Daire": [
+            { q: "Yarıçapı r olan çemberin çevresi?", a: "2πr", d: ["πr", "πr²", "2r"] },
+            { q: "Yarıçapı r olan dairenin alanı?", a: "πr²", d: ["2πr", "πr", "r²"] },
+            { q: "Çapı 10 cm olan dairenin yarıçapı?", a: "5 cm", d: ["10 cm", "20 cm", "2.5 cm"] }
+        ]
+    },
+    "8. SINIF": {
+        "Üslü İfadeler": [
+            { q: "2³ = ?", a: "8", d: ["6", "9", "4"] },
+            { q: "5² = ?", a: "25", d: ["10", "15", "125"] },
+            { q: "2⁴ = ?", a: "16", d: ["8", "32", "12"] },
+            { q: "3³ = ?", a: "27", d: ["9", "81", "18"] },
+            { q: "(-2)² = ?", a: "4", d: ["-4", "2", "-2"] },
+            { q: "(-3)³ = ?", a: "-27", d: ["27", "-9", "9"] },
+            { q: "7⁰ = ?", a: "1", d: ["0", "7", "-1"] },
+            { q: "2³ × 2² = ?", a: "32", d: ["12", "64", "10"] }
+        ],
+        "Kareköklü İfadeler": [
+            { q: "√9 = ?", a: "3", d: ["9", "81", "4.5"] },
+            { q: "√16 = ?", a: "4", d: ["8", "2", "256"] },
+            { q: "√25 = ?", a: "5", d: ["12.5", "625", "10"] },
+            { q: "√49 = ?", a: "7", d: ["24.5", "14", "343"] },
+            { q: "√100 = ?", a: "10", d: ["50", "1000", "20"] },
+            { q: "√64 = ?", a: "8", d: ["32", "4", "16"] },
+            { q: "√144 = ?", a: "12", d: ["72", "14", "24"] },
+            { q: "√4 + √9 = ?", a: "5", d: ["√13", "6", "13"] }
+        ],
+        "Özdeşlikler": [
+            { q: "(x + 2)² açılımı?", a: "x² + 4x + 4", d: ["x² + 4", "x² + 2x + 4", "x² + 4x + 2"] },
+            { q: "(a - 3)² açılımı?", a: "a² - 6a + 9", d: ["a² - 9", "a² - 3a + 9", "a² + 6a + 9"] },
+            { q: "(x + 5)(x - 5) = ?", a: "x² - 25", d: ["x² + 25", "x² - 10x - 25", "2x - 25"] },
+            { q: "x² - 9 = ?", a: "(x-3)(x+3)", d: ["(x-9)(x+9)", "(x-3)²", "(x+3)²"] },
+            { q: "(a + b)² = ?", a: "a² + 2ab + b²", d: ["a² + b²", "a² + ab + b²", "2a² + 2b²"] }
+        ],
+        "Çarpanlara Ayırma": [
+            { q: "x² + 5x = ?", a: "x(x + 5)", d: ["x² + 5", "(x+5)²", "5x²"] },
+            { q: "2x + 4 = ?", a: "2(x + 2)", d: ["2x + 2", "(x+4)", "x + 2"] },
+            { q: "x² - 4 = ?", a: "(x-2)(x+2)", d: ["(x-4)(x+4)", "(x-2)²", "x² + 4"] },
+            { q: "x² + 6x + 9 = ?", a: "(x+3)²", d: ["(x-3)²", "(x+9)²", "x(x+6)+9"] }
+        ],
+        "Olasılık": [
+            { q: "Yazı-tura atışında yazı gelme olası?", a: "1/2", d: ["1", "1/4", "2"] },
+            { q: "Zarla 6 gelme olasılığı?", a: "1/6", d: ["1/3", "6", "1"] },
+            { q: "Zarla çift sayı gelme olasılığı?", a: "1/2", d: ["1/3", "1/6", "2/3"] },
+            { q: "İmkansız olayın olasılığı?", a: "0", d: ["1", "-1", "∞"] },
+            { q: "Kesin olayın olasılığı?", a: "1", d: ["0", "100", "∞"] }
+        ],
+        "Denklemler": [
+            { q: "x² = 9 ise x = ?", a: "±3", d: ["3", "-3", "81"] },
+            { q: "x² - 4 = 0 ise x = ?", a: "±2", d: ["2", "-2", "4"] },
+            { q: "x² = 25 ise x = ?", a: "±5", d: ["5", "-5", "625"] },
+            { q: "x² = 100 ise x = ?", a: "±10", d: ["10", "50", "0"] }
+        ],
+        "Üçgenler": [
+            { q: "Üçgenin iç açıları toplamı?", a: "180°", d: ["360°", "90°", "270°"] },
+            { q: "Eşkenar üçgende her açı?", a: "60°", d: ["90°", "45°", "120°"] },
+            { q: "3-4-5 üçgeni hangi tür?", a: "Dik üçgen", d: ["Eşkenar", "İkizkenar", "Geniş açılı"] },
+            { q: "Pisagor teoremi: a² + b² = ?", a: "c²", d: ["(a+b)²", "2ab", "ab"] }
+        ],
+        "Eşitsizlikler": [
+            { q: "x + 3 > 5 ise x > ?", a: "2", d: ["3", "5", "8"] },
+            { q: "2x < 10 ise x < ?", a: "5", d: ["10", "2", "20"] },
+            { q: "x - 4 ≥ 6 ise x ≥ ?", a: "10", d: ["2", "6", "-10"] },
+            { q: "-2x > 6 ise x < ?", a: "-3", d: ["3", "-6", "12"] }
+        ]
+    }
+};
+
+// --- DİNAMİK SORU ÜRETİCİLER ---
+const dynamicGenerators = {
+    "5. SINIF": {
+        "Doğal Sayılar": (d) => {
+            const ops = [['+', (a, b) => a + b], ['-', (a, b) => a - b], ['×', (a, b) => a * b]];
+            const [op, fn] = ops[rand(0, 2)];
+            let a = rand(5, 30 * d), b = rand(2, 15 * d);
+            if (op === '-' && a < b) [a, b] = [b, a];
+            if (op === '×') { a = rand(2, 10 + d); b = rand(2, 10); }
+            const ans = fn(a, b);
+            return { q: `${a} ${op} ${b} = ?`, a: ans, opts: generateWrongOptions(ans) };
+        },
+        "Kesirler": (d) => {
+            const payda = rand(2, 8 + d);
+            const p1 = rand(1, payda - 1), p2 = rand(1, Math.min(payda - p1, payda - 1));
+            const ans = p1 + p2;
+            return { q: `${p1}/${payda} + ${p2}/${payda} = ?`, a: `${ans}/${payda}`, opts: [`${ans - 1}/${payda}`, `${ans + 1}/${payda}`, `${ans}/${payda + 1}`].sort(() => Math.random() - 0.5) };
+        },
+        "Çevre ve Alan": (d) => {
+            const kenar = rand(2, 8 + d * 2);
+            if (rand(0, 1) === 0) {
+                return { q: `Kenarı ${kenar} cm karenin çevresi?`, a: kenar * 4, opts: generateWrongOptions(kenar * 4) };
+            }
+            return { q: `Kenarı ${kenar} cm karenin alanı?`, a: kenar * kenar, opts: generateWrongOptions(kenar * kenar) };
+        }
+    },
+    "6. SINIF": {
+        "Tam Sayılar": (d) => {
+            const a = rand(-10 * d, 10 * d), b = rand(-10 * d, 10 * d);
+            const ops = [['+', a + b], ['-', a - b], ['×', a * b]];
+            const [op, ans] = ops[rand(0, 2)];
+            return { q: `(${a}) ${op} (${b}) = ?`, a: ans, opts: generateWrongOptions(ans) };
+        },
+        "Oran-Orantı": (d) => {
+            const a = rand(2, 8), b = rand(2, 5);
+            const x = a * b;
+            return { q: `${a}:${b} = ${x}:? (? = ?)`, a: b * b, opts: generateWrongOptions(b * b) };
+        },
+        "Denklem": (d) => {
+            const x = rand(1, 10 + d * 3);
+            const b = rand(1, 15);
+            return { q: `x + ${b} = ${x + b} ise x = ?`, a: x, opts: generateWrongOptions(x) };
+        },
+        "Hacim": (d) => {
+            const a = rand(2, 4 + d), b = rand(2, 4 + d), c = rand(2, 4 + d);
+            return { q: `${a}×${b}×${c} hacmi?`, a: a * b * c, opts: generateWrongOptions(a * b * c) };
+        },
+        "Açılar": (d) => {
+            const aci = rand(20, 80);
+            return { q: `${aci}° açının bütünleyeni?`, a: 180 - aci, opts: generateWrongOptions(180 - aci) };
+        }
+    },
+    "7. SINIF": {
+        "Rasyonel Sayılar": (d) => {
+            const n = rand(1, 15);
+            return { q: `|-${n}| = ?`, a: n, opts: generateWrongOptions(n) };
+        },
+        "Cebirsel İfadeler": (d) => {
+            const a = rand(2, 6 + d), b = rand(2, 6 + d);
+            return { q: `${a}x + ${b}x = ?`, a: `${a + b}x`, opts: [`${a * b}x`, `${a + b}`, `${a}x`].sort(() => Math.random() - 0.5) };
+        },
+        "Denklemler": (d) => {
+            const x = rand(1, 8 + d * 2);
+            const a = rand(2, 4), b = rand(1, 15);
+            return { q: `${a}x + ${b} = ${a * x + b} ise x = ?`, a: x, opts: generateWrongOptions(x) };
+        },
+        "Oran ve Orantı": (d) => {
+            const sayi = rand(2, 10) * 10;
+            const oran = [10, 20, 25, 50][rand(0, 3)];
+            return { q: `${sayi}'nin %${oran}'si?`, a: sayi * oran / 100, opts: generateWrongOptions(sayi * oran / 100) };
+        },
+        "Yüzdeler": (d) => {
+            const fiyat = rand(5, 15) * 10;
+            const oran = [10, 20, 25][rand(0, 2)];
+            const yeni = fiyat + (fiyat * oran / 100);
+            return { q: `%${oran} artışla ${fiyat} TL → ?`, a: yeni, opts: generateWrongOptions(yeni) };
+        },
+        "Çember ve Daire": (d) => {
+            const r = rand(2, 8 + d);
+            if (rand(0, 1) === 0) {
+                return { q: `r=${r}, çevre≈? (π≈3)`, a: 6 * r, opts: generateWrongOptions(6 * r) };
+            }
+            return { q: `r=${r}, alan≈? (π≈3)`, a: 3 * r * r, opts: generateWrongOptions(3 * r * r) };
+        }
+    },
+    "8. SINIF": {
+        "Üslü İfadeler": (d) => {
+            const base = rand(2, 4 + d);
+            const exp = rand(2, 3);
+            const ans = Math.pow(base, exp);
+            return { q: `${base}^${exp} = ?`, a: ans, opts: generateWrongOptions(ans) };
+        },
+        "Kareköklü İfadeler": (d) => {
+            const n = rand(2, 12 + d * 2);
+            return { q: `√${n * n} = ?`, a: n, opts: generateWrongOptions(n) };
+        },
+        "Özdeşlikler": (d) => {
+            const a = rand(1, 5 + d);
+            return { q: `(x+${a})² açılımı?`, a: `x²+${2 * a}x+${a * a}`, opts: [`x²+${a * a}`, `x²+${a}x+${a * a}`, `x²+${2 * a}x+${a}`].sort(() => Math.random() - 0.5) };
+        },
+        "Çarpanlara Ayırma": (d) => {
+            const a = rand(2, 6), b = rand(2, 6);
+            return { q: `${a}x + ${a * b} = ?`, a: `${a}(x+${b})`, opts: [`${b}(x+${a})`, `x(${a}+${b})`, `${a * b}x`].sort(() => Math.random() - 0.5) };
+        },
+        "Denklemler": (d) => {
+            const x = rand(2, 10 + d);
+            return { q: `x² = ${x * x} ise x = ?`, a: `±${x}`, opts: [`${x}`, `-${x}`, `${x * x / 2}`].sort(() => Math.random() - 0.5) };
+        },
+        "Üçgenler": (d) => {
+            const pairs = [[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17]];
+            const [a, b, c] = pairs[rand(0, 3)];
+            return { q: `${a},${b} dik kenar → hipotenüs?`, a: c, opts: generateWrongOptions(c) };
+        },
+        "Eşitsizlikler": (d) => {
+            const a = rand(2, 5);
+            const b = rand(10, 30);
+            const ans = Math.floor(b / a);
+            return { q: `${a}x < ${b} ise x < ?`, a: ans, opts: generateWrongOptions(ans) };
+        }
+    }
+};
+
 function getGeneratorFunction(cls, top) {
-    // 5. SINIF
-    if (cls === "5. SINIF") {
-        if (top === "Doğal Sayılar") return (d) => {
-            let max = d === 1 ? 100 : d === 2 ? 1000 : 10000;
-            let n1 = rand(10, max), n2 = rand(10, max);
-            let op = randChoice(['+', '-']);
-            if (op === '-' && n1 < n2) [n1, n2] = [n2, n1];
-            return { q: `${n1} ${op} ${n2} = ?`, a: eval(`${n1}${op}${n2}`), opts: generateWrongOptions(eval(`${n1}${op}${n2}`)) };
-        };
-        if (top === "Kesirler") return (d) => {
-            let payda = d === 1 ? rand(2, 10) : rand(10, 20);
-            let p1 = rand(1, payda - 1), p2 = rand(1, payda - 1);
-            let res = p1 + p2;
-            return { q: `${p1}/${payda} + ${p2}/${payda} = ?`, a: `${res}/${payda}`, opts: [`${res - 1}/${payda}`, `${res + 1}/${payda}`, `${res}/${payda + 1}`].sort(() => Math.random() - 0.5) };
-        };
-        if (top === "Ondalık Gösterim") return (d) => {
-            let n = (Math.random() * (d * 10)).toFixed(1);
-            return { q: `${n} sayısının okunuşu?`, a: n.replace('.', ','), opts: [n.replace('.', ''), (parseFloat(n) + 0.1).toFixed(1).replace('.', ','), (parseFloat(n) - 0.1).toFixed(1).replace('.', ',')].sort(() => Math.random() - 0.5) };
-        };
-        if (top === "Yüzdeler") return (d) => {
-            let n = rand(1, d * 2) * 5;
-            return { q: `${n}/100 kesrinin yüzde sembolü ile gösterimi?`, a: `%${n}`, opts: [`%${n + 10}`, `%${n - 5}`, `%${n * 2}`].sort(() => Math.random() - 0.5) };
-        };
-    }
+    // Dinamik üretici var mı?
+    const dynamicGen = dynamicGenerators[cls]?.[top];
+    const bank = questionBanks[cls]?.[top];
 
-    // 6. SINIF
-    if (cls === "6. SINIF") {
-        if (top === "Çarpanlar ve Katlar") return (d) => {
-            let n = rand(2, d * 5);
-            let k = rand(2, 5);
-            return { q: `${n} sayısının ${k} katı kaçtır?`, a: n * k, opts: generateWrongOptions(n * k) };
-        };
-        if (top === "Tam Sayılar") return (d) => {
-            let n1 = rand(-10 * d, 10 * d), n2 = rand(-10 * d, 10 * d);
-            let ans = n1 > n2 ? ">" : (n1 < n2 ? "<" : "=");
-            return { q: `${n1} ... ${n2} (Boşluğa ne gelir?)`, a: ans, opts: [">", "<", "="].sort(() => Math.random() - 0.5) };
-        };
-        if (top === "Kesirlerle İşlemler") return (d) => {
-            let a = rand(1, 5), b = rand(1, 5);
-            return { q: `(${a}/2) * (${b}/3) işleminin sonucu?`, a: `${a * b}/6`, opts: [`${a + b}/6`, `${a * b}/5`, `${a}/6`].sort(() => Math.random() - 0.5) };
-        };
-        if (top === "Ondalık Gösterim") return (d) => {
-            let n = rand(1, 10), k = rand(1, 10);
-            return { q: `${n},${k} sayısının 10 ile çarpımı?`, a: `${n * 10 + k}`, opts: [`${n},${k}0`, `${n}${k}0`, `${n},0${k}`].sort(() => Math.random() - 0.5) };
-        };
-    }
+    return (d) => {
+        // %50 dinamik, %50 statik (her ikisi de varsa)
+        const useDynamic = dynamicGen && (!bank || bank.length === 0 || Math.random() > 0.5);
 
-    // 7. SINIF
-    if (cls === "7. SINIF") {
-        if (top === "Tam Sayılar") return (d) => {
-            let n1 = rand(-10 * d, 10 * d), n2 = rand(-10 * d, 10 * d);
-            let op = randChoice(['+', '-', '*']);
-            if (op === '*') { n1 = rand(-5 * d, 5 * d); n2 = rand(-5, 5); }
-            let res = op === '+' ? n1 + n2 : op === '-' ? n1 - n2 : n1 * n2;
-            return { q: `(${n1}) ${op} (${n2}) = ?`, a: res, opts: generateWrongOptions(res) };
-        };
-        if (top === "Cebirsel İfadeler") return (d) => {
-            let x = rand(2, 5 * d);
-            return { q: `x = ${x} ise, 3x - 5 kaçtır?`, a: 3 * x - 5, opts: generateWrongOptions(3 * x - 5) };
-        };
-        if (top === "Denklemler") return (d) => {
-            let x = rand(1, 10);
-            let b = rand(1, 20);
-            return { q: `x + ${b} = ${x + b} ise x kaçtır?`, a: x, opts: generateWrongOptions(x) };
-        };
-        if (top === "Yüzdeler") return (d) => {
-            let val = rand(1, 10) * 10;
-            let perc = d === 1 ? 10 : d === 2 ? 20 : 25;
-            return { q: `${val} sayısının %${perc}'si kaçtır?`, a: (val * perc) / 100, opts: generateWrongOptions((val * perc) / 100) };
-        };
-    }
+        if (useDynamic) {
+            return dynamicGen(d);
+        }
 
-    // 8. SINIF
-    if (cls === "8. SINIF") {
-        if (top === "Çarpanlar ve Katlar") return (d) => {
-            let primes = [2, 3, 5, 7, 11];
-            let p = primes[rand(0, d)];
-            return { q: `${p} ile aralarında asal olan sayı hangisidir?`, a: p + 1, opts: [p * 2, p * 3, p * 5].sort(() => Math.random() - 0.5) };
-        };
-        if (top === "Üslü İfadeler") return (d) => {
-            let base = rand(2, 3 + d);
-            let exp = rand(2, 3);
-            return { q: `${base} üssü ${exp} kaçtır?`, a: Math.pow(base, exp), opts: generateWrongOptions(Math.pow(base, exp)) };
-        };
-        if (top === "Kareköklü İfadeler") return (d) => {
-            let n = rand(2, 10 + d * 2);
-            return { q: `√${n * n} işleminin sonucu?`, a: n, opts: generateWrongOptions(n) };
-        };
-        if (top === "Olasılık") return (d) => {
-            return { q: "Bir zar atıldığında çift gelme olasılığı?", a: "1/2", opts: ["1/6", "1/3", "2/3"].sort(() => Math.random() - 0.5) };
-        };
-    }
+        if (bank && bank.length > 0) {
+            const q = bank[Math.floor(Math.random() * bank.length)];
+            return { q: q.q, a: q.a, opts: [q.a, ...q.d].sort(() => Math.random() - 0.5) };
+        }
 
-    // Fallback
-    let n1 = rand(5, 50), n2 = rand(5, 50);
-    return { q: `${n1} + ${n2} = ?`, a: n1 + n2, opts: generateWrongOptions(n1 + n2) };
+        // Fallback
+        let n1 = rand(5, 50), n2 = rand(5, 50);
+        return { q: `${n1} + ${n2} = ?`, a: n1 + n2, opts: generateWrongOptions(n1 + n2) };
+    };
 }
 
 function generateMath() {

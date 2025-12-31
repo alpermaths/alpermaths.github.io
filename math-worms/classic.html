@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Matematik Savaşları: Klasik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            background-color: #1a1a1a;
+            user-select: none;
+        }
+
+        .game-font {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+
+        .btn-game {
+            transition: transform 0.05s, filter 0.1s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-game:active {
+            transform: scale(0.92);
+            filter: brightness(0.9);
+        }
+
+        .glass-panel {
+            background: rgba(40, 30, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid #8b4513;
+            border-radius: 1rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            color: #e2e8f0;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .btn-fire-ready {
+            animation: pulse-red 1.5s infinite;
+        }
+
+        /* Flashing timer */
+        .timer-warning {
+            color: #ef4444 !important;
+            animation: pulse-text 0.5s infinite alternate;
+        }
+
+        @keyframes pulse-text {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.2);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900">
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+
+    <!-- UI Overlay -->
+    <div id="ui-layer" class="p-2 select-none">
+
+        <!-- Top HUD -->
+        <div class="flex flex-col w-full pointer-events-none z-10 gap-2">
+            <div class="flex justify-between items-center w-full px-2">
+                <div class="flex gap-2 pointer-events-auto">
+                    <a href="/"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-lg border border-indigo-400 text-xs font-bold shadow-lg transition-colors flex items-center gap-1"
+                        style="text-decoration: none;">
+                        <i class="fas fa-home"></i> ANASAYFA
+                    </a>
+                    <button onclick="goToMenu()"
+                        class="interactive bg-gray-700/80 hover:bg-red-600 text-white p-2 rounded-lg border border-gray-500 text-xs font-bold shadow-lg transition-colors">
+                        <i class="fas fa-redo"></i> MENÜ
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <div
+                        class="bg-gray-800/90 text-white px-3 py-1 rounded-full border border-gray-600 font-bold text-lg shadow-lg">
+                        <span id="turn-timer" class="text-yellow-400 transition-all duration-200">45</span>
+                    </div>
+                    <div
+                        class="bg-white/20 backdrop-blur px-3 py-1 rounded-lg flex items-center gap-2 text-white text-xs font-bold border border-white/30">
+                        <i class="fas fa-wind text-gray-300"></i>
+                        <i id="wind-icon" class="fas fa-arrow-right"></i>
+                        <span id="wind-text">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="health-bars-container" class="flex justify-around items-start w-full px-2 flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Commentary Box -->
+        <div id="commentary"
+            class="absolute top-32 left-1/2 transform -translate-x-1/2 w-full max-w-md pointer-events-none transition-opacity duration-500 opacity-0 z-0">
+            <div
+                class="bg-black/60 backdrop-blur-md text-white p-3 rounded-xl border border-gray-500/50 text-center shadow-lg mx-4">
+                <div
+                    class="flex items-center justify-center gap-2 mb-1 text-yellow-300 text-xs font-bold uppercase tracking-widest">
+                    <i class="fas fa-volume-up"></i> SPİKER
+                </div>
+                <p id="comment-text" class="text-sm md:text-base font-medium italic text-gray-100">Maç başlıyor!</p>
+            </div>
+        </div>
+
+        <!-- Power Meter -->
+        <div id="power-container"
+            class="absolute top-24 left-1/2 transform -translate-x-1/2 w-64 h-8 bg-gray-900 border-2 border-white rounded-lg overflow-hidden hidden shadow-[0_0_15px_rgba(255,255,0,0.5)] z-20">
+            <div id="power-fill" class="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-600 w-0"></div>
+            <span
+                class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-md">GÜÇ</span>
+        </div>
+
+        <!-- Turn Message -->
+        <div id="message-area"
+            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none hidden z-20 w-full">
+            <h2 id="message-text"
+                class="text-5xl md:text-7xl game-font text-white drop-shadow-[0_4px_0_#000] stroke-black"
+                style="-webkit-text-stroke: 2px black;">TUR</h2>
+            <div id="game-over-controls" class="mt-8 pointer-events-auto hidden">
+                <button onclick="goToMenu()"
+                    class="interactive px-8 py-3 bg-green-600 hover:bg-green-500 text-white text-xl font-bold rounded-xl shadow-lg border-b-4 border-green-800">
+                    ANA MENÜYE DÖN
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="mt-auto w-full flex justify-between items-end pb-4 interactive z-10">
+            <!-- Movement -->
+            <div class="flex gap-3 items-end">
+                <div class="flex gap-1 bg-gray-800/50 p-2 rounded-2xl backdrop-blur-sm border border-white/10">
+                    <button id="btn-left"
+                        class="btn-game w-14 h-14 bg-gray-200 rounded-lg shadow-lg border-b-4 border-gray-400 text-gray-700 text-xl flex items-center justify-center">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button id="btn-right"
+                        class="btn-game w-14 h-14 bg-gray-200 rounded-lg shadow-lg border-b-4 border-gray-400 text-gray-700 text-xl flex items-center justify-center">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <!-- Jump Button -->
+                <button id="btn-jump"
+                    class="btn-game w-14 h-14 bg-yellow-400 rounded-full shadow-lg border-b-4 border-yellow-600 text-yellow-900 text-xl mb-2 flex items-center justify-center">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+            </div>
+
+            <!-- Action Area -->
+            <div class="flex gap-4 items-end">
+                <div class="flex flex-col gap-1 bg-gray-800/50 p-2 rounded-2xl backdrop-blur-sm border border-white/10">
+                    <button id="btn-aim-up"
+                        class="btn-game w-12 h-12 bg-gray-300 rounded-lg border-b-4 border-gray-500 text-gray-700 shadow">
+                        <i class="fas fa-angle-up"></i>
+                    </button>
+                    <button id="btn-aim-down"
+                        class="btn-game w-12 h-12 bg-gray-300 rounded-lg border-b-4 border-gray-500 text-gray-700 shadow">
+                        <i class="fas fa-angle-down"></i>
+                    </button>
+                </div>
+
+                <button id="btn-quiz"
+                    class="btn-game w-20 h-20 bg-blue-500 rounded-2xl border-b-8 border-blue-700 text-white text-3xl shadow-xl flex items-center justify-center animate-bounce">
+                    <i class="fas fa-lock-open"></i>
+                </button>
+                <button id="btn-fire"
+                    class="hidden btn-game w-24 h-24 bg-red-600 rounded-full border-b-8 border-red-800 text-white text-4xl shadow-[0_0_20px_rgba(255,0,0,0.6)] flex items-center justify-center btn-fire-ready">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Math Modal -->
+    <div id="math-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden p-4">
+        <div class="glass-panel w-full max-w-2xl p-6 relative overflow-hidden flex flex-col items-center">
+            <h3 class="text-3xl text-yellow-400 mb-2 game-font text-center drop-shadow-md">KİLİDİ AÇ!</h3>
+            <p class="text-gray-300 text-center mb-4 text-sm">Doğru cevap verip silahını şarj et.</p>
+            <div
+                class="bg-gray-900/50 p-6 rounded-xl border border-yellow-700 mb-6 w-full relative min-h-[100px] flex items-center justify-center">
+                <span id="question-text"
+                    class="text-xl md:text-2xl font-bold text-white font-mono tracking-wide block text-center"></span>
+            </div>
+            <div id="answers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full"></div>
+        </div>
+    </div>
+
+    <!-- Main Menu with Grade/Topic Selection -->
+    <div id="start-screen"
+        class="fixed inset-0 bg-gray-900 z-50 flex flex-col items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] overflow-auto p-4">
+
+        <!-- Grade Selection -->
+        <div id="grade-selection" class="text-center relative w-full max-w-4xl mx-auto">
+            <a href="/"
+                class="absolute top-0 left-0 bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-lg font-bold shadow-lg transition-colors flex items-center gap-2"
+                style="text-decoration: none;">
+                <i class="fas fa-home"></i> ANASAYFA
+            </a>
+            <a href="/math-worms/"
+                class="absolute top-0 right-0 bg-purple-600 hover:bg-purple-500 text-white p-3 rounded-lg font-bold shadow-lg transition-colors flex items-center gap-2"
+                style="text-decoration: none;">
+                <i class="fas fa-cube"></i> 3D GÖRÜNÜM
+            </a>
+
+            <h1 class="text-5xl md:text-7xl game-font text-transparent bg-clip-text bg-gradient-to-b from-yellow-400 to-orange-600 drop-shadow-sm mb-2 mt-16"
+                style="filter: drop-shadow(0px 4px 0px #7c2d12);">WORMS</h1>
+            <p class="text-amber-300 text-lg font-bold mb-4">📺 KLASİK GÖRÜNÜM</p>
+
+            <h2 class="text-xl md:text-2xl text-white mb-6">Sınıf Seçin</h2>
+            <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                <button onclick="selectGrade(5)"
+                    class="btn-game bg-green-600 hover:bg-green-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-green-800 transition-all hover:scale-105">5.
+                    Sınıf</button>
+                <button onclick="selectGrade(6)"
+                    class="btn-game bg-blue-600 hover:bg-blue-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-blue-800 transition-all hover:scale-105">6.
+                    Sınıf</button>
+                <button onclick="selectGrade(7)"
+                    class="btn-game bg-purple-600 hover:bg-purple-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-purple-800 transition-all hover:scale-105">7.
+                    Sınıf</button>
+                <button onclick="selectGrade(8)"
+                    class="btn-game bg-red-600 hover:bg-red-500 text-white text-2xl font-bold py-6 px-8 rounded-xl border-b-4 border-red-800 transition-all hover:scale-105">8.
+                    Sınıf</button>
+            </div>
+
+            <div class="mt-6 text-center">
+                <p class="text-white text-sm font-bold">Tasarımcı: ALPER TEYMUR</p>
+                <p class="text-yellow-500 text-xs mt-1">MACİDE GAZİOĞLU KÜKÜRTLÜ ORTAOKULU</p>
+            </div>
+        </div>
+
+        <!-- Topic Selection -->
+        <div id="topic-selection" class="text-center hidden w-full max-w-4xl mx-auto">
+            <h2 class="text-xl md:text-2xl text-white mb-2"><span id="selected-grade-text"></span></h2>
+            <h3 class="text-lg text-gray-300 mb-6">Konu Seçin</h3>
+            <div id="topic-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-lg mx-auto mb-6"></div>
+            <button onclick="backToGrade()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i>
+                Geri</button>
+        </div>
+
+        <!-- Player Selection -->
+        <div id="player-selection" class="text-center hidden w-full max-w-4xl mx-auto">
+            <h2 class="text-xl md:text-2xl text-white mb-2"><span id="selected-topic-text"></span></h2>
+            <h3 class="text-lg text-gray-300 mb-6">Oyuncu Sayısı</h3>
+            <div class="flex gap-4 justify-center mb-6">
+                <button onclick="startGameWithPlayers(2)"
+                    class="btn-game bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-xl font-bold py-4 px-8 rounded-xl border-b-4 border-yellow-700 transition-all hover:scale-105">2
+                    Kişi</button>
+                <button onclick="startGameWithPlayers(3)"
+                    class="btn-game bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-xl font-bold py-4 px-8 rounded-xl border-b-4 border-yellow-700 transition-all hover:scale-105">3
+                    Kişi</button>
+                <button onclick="startGameWithPlayers(4)"
+                    class="btn-game bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-xl font-bold py-4 px-8 rounded-xl border-b-4 border-yellow-700 transition-all hover:scale-105">4
+                    Kişi</button>
+            </div>
+            <button onclick="backToTopic()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i>
+                Geri</button>
+        </div>
+    </div>
+
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- AUDIO MANAGER ---
+        const AudioSys = {
+            ctx: null,
+            init: function () {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+            },
+            playTone: function (freq, type, duration, vol = 0.1) {
+                if (!this.ctx) this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + duration);
+            },
+            playJump: function () { this.playTone(200, "triangle", 0.1, 0.1); },
+            playShoot: function () { this.playTone(600, "sawtooth", 0.3, 0.1); },
+            playExplosion: function () { this.playTone(80, "square", 0.5, 0.3); },
+            playSplash: function () { this.playTone(150, "sine", 0.4, 0.2); },
+            playCharge: function (val) { this.playTone(200 + val * 5, "sine", 0.05, 0.05); },
+            playTick: function () { this.playTone(800, "square", 0.05, 0.05); }
+        };
+
+        // --- CONFIG ---
+        let width, height;
+
+        let gameState = "MENU";
+        let currentPlayer = 0;
+        let totalPlayers = 2;
+        let terrainY = [];
+        let terrainTexture = [];
+        let waterLevel = 0;
+        let wind = 0;
+        let projectiles = [];
+        let explosions = [];
+        let particles = [];
+        let floatTexts = [];
+        let turnTimer = 45;
+        let turnInterval;
+        let power = 0;
+        let powerDir = 1.5;
+        let isPowering = false;
+        let turnChangePending = false;
+
+        // Team Configs
+        const teamConfigs = [
+            { name: "MAVİ", color: "#60a5fa", body: "#3b82f6", outline: "#1e3a8a", bg: "bg-blue-600" },
+            { name: "KIRMIZI", color: "#f87171", body: "#ef4444", outline: "#7f1d1d", bg: "bg-red-600" },
+            { name: "YEŞİL", color: "#4ade80", body: "#22c55e", outline: "#14532d", bg: "bg-green-600" },
+            { name: "MOR", color: "#c084fc", body: "#a855f7", outline: "#581c87", bg: "bg-purple-600" }
+        ];
+
+        let teams = [];
+
+        // --- COMMENTS ---
+        const comments = {
+            start: ["Hazır mısınız?", "Savaş başlasın!", "Mağaraya hoşgeldiniz!"],
+            hit: ["Tam isabet!", "Bum!", "Fena vurdu!", "Hesap tuttu!"],
+            miss: ["Karavana!", "Rüzgarı unuttun!", "Karanlıkta göremedi!", "Iskaladı!"],
+            water: ["Boğuldu!", "Balık yemi oldu!", "Yüzme biliyor mu?"],
+            win: ["Şampiyon belli!", "Zafer!", "Oyun bitti!"],
+            draw: ["Dostluk kazandı!", "Berabere!", "İkisi de gitti!"]
+        };
+
+        function showComment(type) {
+            const list = comments[type] || comments['miss'];
+            const text = list[Math.floor(Math.random() * list.length)];
+            const el = document.getElementById('commentary');
+            document.getElementById('comment-text').innerText = text;
+            el.style.opacity = '1';
+            setTimeout(() => { el.style.opacity = '0'; }, 3000);
+        }
+
+        // --- MENU STATE ---
+        let selectedGrade = null;
+        let selectedTopic = null;
+
+        // TOPICS PER GRADE
+        const gradeTopics = {
+            5: ["Doğal Sayılar", "Kesirler", "Geometrik Şekiller", "Çevre ve Alan"],
+            6: ["Tam Sayılar", "Kesirler", "Oran-Orantı", "Denklem", "Açılar", "Hacim"],
+            7: ["Rasyonel Sayılar", "Cebirsel İfadeler", "Denklemler", "Oran ve Orantı", "Yüzdeler", "Dörtgenler", "Çember ve Daire"],
+            8: ["Üslü İfadeler", "Kareköklü İfadeler", "Özdeşlikler", "Çarpanlara Ayırma", "Olasılık", "Denklemler", "Üçgenler", "Eşitsizlikler"]
+        };
+
+        // MENU FUNCTIONS
+        function selectGrade(grade) {
+            selectedGrade = grade;
+            document.getElementById('grade-selection').classList.add('hidden');
+            document.getElementById('topic-selection').classList.remove('hidden');
+            document.getElementById('selected-grade-text').innerText = grade + '. Sınıf';
+
+            const container = document.getElementById('topic-buttons');
+            container.innerHTML = '';
+            gradeTopics[grade].forEach(topic => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-game bg-teal-600 hover:bg-teal-500 text-white text-lg font-bold py-3 px-6 rounded-xl border-b-4 border-teal-800 transition-all hover:scale-105';
+                btn.innerText = topic;
+                btn.onclick = () => selectTopic(topic);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectTopic(topic) {
+            selectedTopic = topic;
+            document.getElementById('topic-selection').classList.add('hidden');
+            document.getElementById('player-selection').classList.remove('hidden');
+            document.getElementById('selected-topic-text').innerText = selectedGrade + '. Sınıf - ' + topic;
+        }
+
+        function backToGrade() {
+            document.getElementById('topic-selection').classList.add('hidden');
+            document.getElementById('grade-selection').classList.remove('hidden');
+        }
+
+        function backToTopic() {
+            document.getElementById('player-selection').classList.add('hidden');
+            document.getElementById('topic-selection').classList.remove('hidden');
+        }
+
+        function startGameWithPlayers(count) {
+            totalPlayers = count;
+            document.getElementById('start-screen').style.display = 'none';
+            startGame(count);
+        }
+
+        // --- MATH SYSTEM - COMPREHENSIVE QUESTION BANKS ---
+        let usedQuestions = new Set();
+
+        const questionBanks = {
+            5: {
+                "Doğal Sayılar": [
+                    { q: "24 + 36 = ?", a: "60", d: ["50", "70", "56"] },
+                    { q: "85 - 27 = ?", a: "58", d: ["62", "52", "68"] },
+                    { q: "12 × 5 = ?", a: "60", d: ["55", "65", "50"] },
+                    { q: "72 ÷ 8 = ?", a: "9", d: ["8", "7", "6"] },
+                    { q: "15 × 4 = ?", a: "60", d: ["45", "55", "65"] },
+                    { q: "100 - 37 = ?", a: "63", d: ["67", "73", "53"] },
+                    { q: "8 × 7 = ?", a: "56", d: ["54", "48", "63"] },
+                    { q: "144 ÷ 12 = ?", a: "12", d: ["11", "13", "14"] },
+                    { q: "25 × 4 = ?", a: "100", d: ["90", "80", "110"] },
+                    { q: "81 ÷ 9 = ?", a: "9", d: ["8", "7", "10"] },
+                    { q: "9 × 9 = ?", a: "81", d: ["72", "90", "79"] },
+                    { q: "250 × 4 = ?", a: "1000", d: ["800", "1200", "900"] },
+                    { q: "120 ÷ 4 = ?", a: "30", d: ["40", "20", "25"] }
+                ],
+                "Kesirler": [
+                    { q: "1/2 + 1/2 = ?", a: "1", d: ["2", "1/4", "2/4"] },
+                    { q: "3/4 + 1/4 = ?", a: "1", d: ["4/8", "2/4", "1/2"] },
+                    { q: "1/2 + 1/4 = ?", a: "3/4", d: ["2/6", "1/6", "2/4"] },
+                    { q: "5/8 - 3/8 = ?", a: "2/8", d: ["1/8", "3/8", "8/8"] },
+                    { q: "2/3 + 1/3 = ?", a: "1", d: ["3/6", "3/3", "2/3"] },
+                    { q: "7/10 - 3/10 = ?", a: "4/10", d: ["3/10", "5/10", "10/10"] },
+                    { q: "4/6'nın sadeleşmiş hali?", a: "2/3", d: ["1/2", "3/4", "4/6"] },
+                    { q: "1 tam = kaç yarım?", a: "2", d: ["1", "3", "4"] }
+                ],
+                "Geometrik Şekiller": [
+                    { q: "Üçgenin kaç kenarı var?", a: "3", d: ["4", "5", "2"] },
+                    { q: "Karenin kaç köşesi var?", a: "4", d: ["3", "5", "6"] },
+                    { q: "Dikdörtgenin kaç kenarı var?", a: "4", d: ["3", "5", "6"] },
+                    { q: "Altıgenin kenar sayısı?", a: "6", d: ["5", "7", "8"] },
+                    { q: "Dairenin kaç köşesi var?", a: "0", d: ["1", "2", "Sonsuz"] },
+                    { q: "Üçgenin iç açıları toplamı?", a: "180°", d: ["360°", "90°", "270°"] }
+                ],
+                "Çevre ve Alan": [
+                    { q: "Kenarı 5 cm olan karenin çevresi?", a: "20 cm", d: ["25 cm", "15 cm", "10 cm"] },
+                    { q: "Kenarı 4 cm olan karenin alanı?", a: "16 cm²", d: ["8 cm²", "12 cm²", "20 cm²"] },
+                    { q: "6×4 dikdörtgenin çevresi?", a: "20 cm", d: ["24 cm", "10 cm", "18 cm"] },
+                    { q: "5×3 dikdörtgenin alanı?", a: "15 cm²", d: ["16 cm²", "8 cm²", "18 cm²"] },
+                    { q: "Kenarı 10 cm karenin çevresi?", a: "40 cm", d: ["100 cm", "20 cm", "30 cm"] }
+                ]
+            },
+            6: {
+                "Tam Sayılar": [
+                    { q: "(-5) + 3 = ?", a: "-2", d: ["2", "-8", "8"] },
+                    { q: "(-7) + (-4) = ?", a: "-11", d: ["11", "-3", "3"] },
+                    { q: "8 - 12 = ?", a: "-4", d: ["4", "-20", "20"] },
+                    { q: "(-6) × 2 = ?", a: "-12", d: ["12", "-8", "8"] },
+                    { q: "(-3) × (-4) = ?", a: "12", d: ["-12", "7", "-7"] },
+                    { q: "15 ÷ (-3) = ?", a: "-5", d: ["5", "-3", "3"] },
+                    { q: "(-9) + 9 = ?", a: "0", d: ["18", "-18", "1"] },
+                    { q: "|−7| = ?", a: "7", d: ["-7", "0", "1"] }
+                ],
+                "Kesirler": [
+                    { q: "2/3 + 1/6 = ?", a: "5/6", d: ["3/9", "3/6", "1/2"] },
+                    { q: "3/4 - 1/2 = ?", a: "1/4", d: ["2/4", "1/2", "2/2"] },
+                    { q: "2/5 × 3 = ?", a: "6/5", d: ["5/5", "6/15", "5/6"] },
+                    { q: "1/2 ÷ 1/4 = ?", a: "2", d: ["1/8", "4", "1/2"] }
+                ],
+                "Oran-Orantı": [
+                    { q: "4:6 oranını sadeleştir", a: "2:3", d: ["1:2", "3:4", "4:6"] },
+                    { q: "x/6 = 2/3 ise x = ?", a: "4", d: ["3", "2", "6"] },
+                    { q: "12'nin 3/4'ü kaçtır?", a: "9", d: ["8", "6", "10"] },
+                    { q: "20'nin %25'i kaçtır?", a: "5", d: ["4", "6", "10"] }
+                ],
+                "Denklem": [
+                    { q: "x + 5 = 12 ise x = ?", a: "7", d: ["5", "17", "6"] },
+                    { q: "2x = 14 ise x = ?", a: "7", d: ["6", "8", "28"] },
+                    { q: "x - 8 = 3 ise x = ?", a: "11", d: ["5", "-5", "24"] },
+                    { q: "3x + 2 = 11 ise x = ?", a: "3", d: ["4", "2", "5"] }
+                ],
+                "Açılar": [
+                    { q: "Dik açı kaç derece?", a: "90°", d: ["180°", "45°", "360°"] },
+                    { q: "Doğru açı kaç derece?", a: "180°", d: ["90°", "360°", "270°"] },
+                    { q: "Tam açı kaç derece?", a: "360°", d: ["180°", "270°", "90°"] },
+                    { q: "60°'nin bütünleyeni kaç derece?", a: "120°", d: ["30°", "60°", "90°"] }
+                ],
+                "Hacim": [
+                    { q: "2×3×4 dikdörtgenler prizmasının hacmi?", a: "24", d: ["9", "14", "36"] },
+                    { q: "Kenarı 3 cm küpün hacmi?", a: "27 cm³", d: ["9 cm³", "18 cm³", "81 cm³"] },
+                    { q: "Kenarı 5 cm küpün hacmi?", a: "125 cm³", d: ["25 cm³", "75 cm³", "15 cm³"] }
+                ]
+            },
+            7: {
+                "Rasyonel Sayılar": [
+                    { q: "-3/4 + 1/4 = ?", a: "-1/2", d: ["-2/4", "1/2", "-1/4"] },
+                    { q: "(-1/2) ÷ (1/4) = ?", a: "-2", d: ["2", "-1/8", "1/8"] },
+                    { q: "-0.5 + 0.3 = ?", a: "-0.2", d: ["0.2", "-0.8", "0.8"] },
+                    { q: "|-3/5| = ?", a: "3/5", d: ["-3/5", "5/3", "-5/3"] },
+                    { q: "0.75 hangi kesir?", a: "3/4", d: ["2/3", "4/5", "7/10"] }
+                ],
+                "Cebirsel İfadeler": [
+                    { q: "3x + 2x = ?", a: "5x", d: ["6x", "5x²", "x"] },
+                    { q: "4a - a = ?", a: "3a", d: ["5a", "4", "3"] },
+                    { q: "2x × 3x = ?", a: "6x²", d: ["5x", "6x", "5x²"] },
+                    { q: "2(x + 3) = ?", a: "2x + 6", d: ["2x + 3", "x + 6", "2x + 5"] },
+                    { q: "x × x × x = ?", a: "x³", d: ["3x", "x + 3", "3x²"] }
+                ],
+                "Denklemler": [
+                    { q: "3x - 5 = 10 ise x = ?", a: "5", d: ["15", "3", "-5"] },
+                    { q: "2(x + 4) = 14 ise x = ?", a: "3", d: ["7", "5", "11"] },
+                    { q: "5x + 3 = 3x + 9 ise x = ?", a: "3", d: ["6", "2", "-3"] },
+                    { q: "x/2 - 3 = 4 ise x = ?", a: "14", d: ["7", "2", "1"] }
+                ],
+                "Oran ve Orantı": [
+                    { q: "6:9 oranını sadeleştir", a: "2:3", d: ["3:4", "1:2", "6:9"] },
+                    { q: "x/8 = 3/4 ise x = ?", a: "6", d: ["4", "12", "2"] },
+                    { q: "24'ün 3/4'ü kaçtır?", a: "18", d: ["16", "12", "20"] },
+                    { q: "50'nin %20'si kaçtır?", a: "10", d: ["25", "5", "20"] }
+                ],
+                "Yüzdeler": [
+                    { q: "120'nin %50'si kaçtır?", a: "60", d: ["50", "70", "24"] },
+                    { q: "80'in %25'i kaçtır?", a: "20", d: ["16", "25", "40"] },
+                    { q: "Fiyatı %10 artan 100 TL kaç olur?", a: "110", d: ["10", "90", "101"] },
+                    { q: "Fiyatı %20 azalan 50 TL kaç olur?", a: "40", d: ["30", "10", "45"] }
+                ],
+                "Dörtgenler": [
+                    { q: "Karenin tüm açıları?", a: "90°", d: ["60°", "45°", "120°"] },
+                    { q: "Dikdörtgenin köşegenleri?", a: "Eşit", d: ["Farklı", "Dik", "Paralel"] },
+                    { q: "Yamuğun kaç kenarı paralel?", a: "2", d: ["0", "4", "1"] },
+                    { q: "Karede alan = 49 ise kenar?", a: "7", d: ["24.5", "14", "98"] }
+                ],
+                "Çember ve Daire": [
+                    { q: "Yarıçapı r olan çemberin çevresi?", a: "2πr", d: ["πr", "πr²", "2r"] },
+                    { q: "Yarıçapı r olan dairenin alanı?", a: "πr²", d: ["2πr", "πr", "r²"] },
+                    { q: "Çapı 10 cm olan dairenin yarıçapı?", a: "5 cm", d: ["10 cm", "20 cm", "2.5 cm"] },
+                    { q: "r = 7 cm ise çevre ≈ ? (π≈3)", a: "42 cm", d: ["21 cm", "14 cm", "49 cm"] }
+                ]
+            },
+            8: {
+                "Üslü İfadeler": [
+                    { q: "2³ = ?", a: "8", d: ["6", "9", "4"] },
+                    { q: "5² = ?", a: "25", d: ["10", "15", "125"] },
+                    { q: "2⁴ = ?", a: "16", d: ["8", "32", "12"] },
+                    { q: "3³ = ?", a: "27", d: ["9", "81", "18"] },
+                    { q: "(-2)² = ?", a: "4", d: ["-4", "2", "-2"] },
+                    { q: "(-3)³ = ?", a: "-27", d: ["27", "-9", "9"] },
+                    { q: "7⁰ = ?", a: "1", d: ["0", "7", "-1"] },
+                    { q: "2³ × 2² = ?", a: "32", d: ["12", "64", "10"] }
+                ],
+                "Kareköklü İfadeler": [
+                    { q: "√9 = ?", a: "3", d: ["9", "81", "4.5"] },
+                    { q: "√16 = ?", a: "4", d: ["8", "2", "256"] },
+                    { q: "√25 = ?", a: "5", d: ["12.5", "625", "10"] },
+                    { q: "√49 = ?", a: "7", d: ["24.5", "14", "343"] },
+                    { q: "√100 = ?", a: "10", d: ["50", "1000", "20"] },
+                    { q: "√64 = ?", a: "8", d: ["32", "4", "16"] },
+                    { q: "√144 = ?", a: "12", d: ["72", "14", "24"] }
+                ],
+                "Özdeşlikler": [
+                    { q: "(x + 2)² açılımı?", a: "x² + 4x + 4", d: ["x² + 4", "x² + 2x + 4", "x² + 4x + 2"] },
+                    { q: "(a - 3)² açılımı?", a: "a² - 6a + 9", d: ["a² - 9", "a² - 3a + 9", "a² + 6a + 9"] },
+                    { q: "(x + 5)(x - 5) = ?", a: "x² - 25", d: ["x² + 25", "x² - 10x - 25", "2x - 25"] },
+                    { q: "x² - 9 = ?", a: "(x-3)(x+3)", d: ["(x-9)(x+9)", "(x-3)²", "(x+3)²"] },
+                    { q: "(a + b)² = ?", a: "a² + 2ab + b²", d: ["a² + b²", "a² + ab + b²", "2a² + 2b²"] },
+                    { q: "(a - b)² = ?", a: "a² - 2ab + b²", d: ["a² - b²", "a² + 2ab + b²", "a² - ab + b²"] },
+                    { q: "(3x + 2)² açılımı?", a: "9x² + 12x + 4", d: ["9x² + 4", "3x² + 12x + 4", "9x² + 6x + 4"] }
+                ],
+                "Çarpanlara Ayırma": [
+                    { q: "x² + 5x = ?", a: "x(x + 5)", d: ["x² + 5", "(x+5)²", "5x²"] },
+                    { q: "2x + 4 = ?", a: "2(x + 2)", d: ["2x + 2", "(x+4)", "x + 2"] },
+                    { q: "x² - 4 = ?", a: "(x-2)(x+2)", d: ["(x-4)(x+4)", "(x-2)²", "x² + 4"] },
+                    { q: "x² + 6x + 9 = ?", a: "(x+3)²", d: ["(x-3)²", "(x+9)²", "x(x+6)+9"] },
+                    { q: "x² - 10x + 25 = ?", a: "(x-5)²", d: ["(x+5)²", "(x-5)(x+5)", "x² - 25"] }
+                ],
+                "Olasılık": [
+                    { q: "Yazı-tura atışında yazı gelme olasılığı?", a: "1/2", d: ["1", "1/4", "2"] },
+                    { q: "Zarla 6 gelme olasılığı?", a: "1/6", d: ["1/3", "6", "1"] },
+                    { q: "Zarla çift sayı gelme olasılığı?", a: "1/2", d: ["1/3", "1/6", "2/3"] },
+                    { q: "Zarla 7 gelme olasılığı?", a: "0", d: ["1/7", "1/6", "1"] },
+                    { q: "İmkansız olayın olasılığı?", a: "0", d: ["1", "-1", "∞"] },
+                    { q: "Kesin olayın olasılığı?", a: "1", d: ["0", "100", "∞"] }
+                ],
+                "Denklemler": [
+                    { q: "x² = 9 ise x = ?", a: "±3", d: ["3", "-3", "81"] },
+                    { q: "x² - 4 = 0 ise x = ?", a: "±2", d: ["2", "-2", "4"] },
+                    { q: "2x² = 18 ise x = ?", a: "±3", d: ["9", "3", "-3"] },
+                    { q: "x² = 25 ise x = ?", a: "±5", d: ["5", "-5", "625"] },
+                    { q: "x² = 100 ise x = ?", a: "±10", d: ["10", "50", "0"] }
+                ],
+                "Üçgenler": [
+                    { q: "Üçgenin iç açıları toplamı?", a: "180°", d: ["360°", "90°", "270°"] },
+                    { q: "Eşkenar üçgende her açı kaç derece?", a: "60°", d: ["90°", "45°", "120°"] },
+                    { q: "3-4-5 üçgeni hangi tür?", a: "Dik üçgen", d: ["Eşkenar", "İkizkenar", "Geniş açılı"] },
+                    { q: "Pisagor teoremi: a² + b² = ?", a: "c²", d: ["(a+b)²", "2ab", "ab"] },
+                    { q: "3 ve 4 dik kenarla hipotenüs?", a: "5", d: ["7", "12", "1"] },
+                    { q: "6 ve 8 dik kenarla hipotenüs?", a: "10", d: ["14", "48", "2"] }
+                ],
+                "Eşitsizlikler": [
+                    { q: "x + 3 > 5 ise x > ?", a: "2", d: ["3", "5", "8"] },
+                    { q: "2x < 10 ise x < ?", a: "5", d: ["10", "2", "20"] },
+                    { q: "x - 4 ≥ 6 ise x ≥ ?", a: "10", d: ["2", "6", "-10"] },
+                    { q: "3x ≤ 12 ise x ≤ ?", a: "4", d: ["12", "36", "9"] },
+                    { q: "-2x > 6 ise x < ?", a: "-3", d: ["3", "-6", "12"] }
+                ]
+            }
+        };
+
+        // --- DİNAMİK SORU ÜRETİCİLER ---
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        const dynamicGenerators = {
+            5: {
+                "Doğal Sayılar": () => {
+                    const ops = [['+', (a, b) => a + b], ['-', (a, b) => a - b], ['×', (a, b) => a * b]];
+                    const [op, fn] = ops[rand(0, 2)];
+                    let a = rand(5, 50), b = rand(2, 20);
+                    if (op === '-' && a < b) [a, b] = [b, a];
+                    if (op === '×') { a = rand(2, 12); b = rand(2, 12); }
+                    const ans = fn(a, b);
+                    return { q: `${a} ${op} ${b} = ?`, a: String(ans), d: [String(ans + rand(1, 5)), String(ans - rand(1, 5)), String(ans + rand(-10, 10))] };
+                },
+                "Çevre ve Alan": () => {
+                    const kenar = rand(3, 12);
+                    const tip = rand(0, 1);
+                    if (tip === 0) {
+                        return { q: `Kenarı ${kenar} cm olan karenin çevresi?`, a: `${kenar * 4} cm`, d: [`${kenar * 3} cm`, `${kenar * 5} cm`, `${kenar * 2} cm`] };
+                    } else {
+                        return { q: `Kenarı ${kenar} cm olan karenin alanı?`, a: `${kenar * kenar} cm²`, d: [`${kenar * 4} cm²`, `${(kenar + 1) * (kenar + 1)} cm²`, `${kenar * (kenar - 1)} cm²`] };
+                    }
+                }
+            },
+            6: {
+                "Tam Sayılar": () => {
+                    const a = rand(-15, 15), b = rand(-15, 15);
+                    const ops = [['+', a + b], ['-', a - b], ['×', a * b]];
+                    const [op, ans] = ops[rand(0, 2)];
+                    return { q: `(${a}) ${op} (${b}) = ?`, a: String(ans), d: [String(ans + rand(1, 5)), String(-ans), String(ans - rand(1, 5))] };
+                },
+                "Denklem": () => {
+                    const x = rand(1, 15);
+                    const b = rand(1, 20);
+                    return { q: `x + ${b} = ${x + b} ise x = ?`, a: String(x), d: [String(x + 1), String(x - 1), String(b)] };
+                },
+                "Hacim": () => {
+                    const a = rand(2, 6), b = rand(2, 6), c = rand(2, 6);
+                    const v = a * b * c;
+                    return { q: `${a}×${b}×${c} prizmasının hacmi?`, a: String(v), d: [String(v + a), String(v - b), String(a + b + c)] };
+                }
+            },
+            7: {
+                "Cebirsel İfadeler": () => {
+                    const a = rand(2, 8), b = rand(2, 8);
+                    return { q: `${a}x + ${b}x = ?`, a: `${a + b}x`, d: [`${a * b}x`, `${a + b}x²`, `${a}x + ${b}`] };
+                },
+                "Denklemler": () => {
+                    const x = rand(1, 12);
+                    const a = rand(2, 5), b = rand(1, 20);
+                    const sonuc = a * x + b;
+                    return { q: `${a}x + ${b} = ${sonuc} ise x = ?`, a: String(x), d: [String(x + 1), String(x - 1), String(a)] };
+                },
+                "Yüzdeler": () => {
+                    const fiyat = rand(5, 20) * 10;
+                    const oran = [10, 20, 25][rand(0, 2)];
+                    const yeni = fiyat + (fiyat * oran / 100);
+                    return { q: `Fiyatı %${oran} artan ${fiyat} TL kaç olur?`, a: String(yeni), d: [String(fiyat), String(yeni + 10), String(yeni - 10)] };
+                }
+            },
+            8: {
+                "Üslü İfadeler": () => {
+                    const base = rand(2, 5);
+                    const exp = rand(2, 4);
+                    const ans = Math.pow(base, exp);
+                    return { q: `${base}${['⁰', '¹', '²', '³', '⁴'][exp]} = ?`, a: String(ans), d: [String(base * exp), String(ans + base), String(ans - base)] };
+                },
+                "Kareköklü İfadeler": () => {
+                    const n = rand(2, 15);
+                    const sqr = n * n;
+                    return { q: `√${sqr} = ?`, a: String(n), d: [String(n + 1), String(n - 1), String(sqr / 2)] };
+                },
+                "Özdeşlikler": () => {
+                    const a = rand(1, 6);
+                    const sqr = a * a;
+                    const dbl = 2 * a;
+                    return { q: `(x + ${a})² açılımı?`, a: `x² + ${dbl}x + ${sqr}`, d: [`x² + ${sqr}`, `x² + ${a}x + ${sqr}`, `x² + ${dbl}x + ${a}`] };
+                },
+                "Çarpanlara Ayırma": () => {
+                    const a = rand(2, 8);
+                    const b = rand(2, 8);
+                    return { q: `${a}x + ${a * b} = ?`, a: `${a}(x + ${b})`, d: [`${b}(x + ${a})`, `x(${a} + ${b})`, `${a * b}x`] };
+                },
+                "Denklemler": () => {
+                    const x = rand(2, 12);
+                    const sqr = x * x;
+                    return { q: `x² = ${sqr} ise x = ?`, a: `±${x}`, d: [String(x), String(-x), String(sqr / 2)] };
+                },
+                "Üçgenler": () => {
+                    const pairs = [[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17]];
+                    const [a, b, c] = pairs[rand(0, 3)];
+                    return { q: `${a} ve ${b} dik kenarla hipotenüs?`, a: String(c), d: [String(a + b), String(c + 1), String(c - 1)] };
+                },
+                "Eşitsizlikler": () => {
+                    const a = rand(2, 6);
+                    const b = rand(5, 30);
+                    const ans = Math.floor(b / a);
+                    return { q: `${a}x < ${b} ise x < ?`, a: String(ans), d: [String(ans + 1), String(b), String(a)] };
+                }
+            }
+        };
+
+        function generateQuestion() {
+            const bank = questionBanks[selectedGrade]?.[selectedTopic];
+            const generator = dynamicGenerators[selectedGrade]?.[selectedTopic];
+
+            // %50 statik, %50 dinamik (eğer her ikisi de varsa)
+            const useDynamic = generator && (Math.random() > 0.5 || !bank || usedQuestions.size >= bank.length);
+
+            if (useDynamic && generator) {
+                const qData = generator();
+                return {
+                    q: qData.q,
+                    a: qData.a,
+                    options: [qData.a, ...qData.d].sort(() => Math.random() - 0.5)
+                };
+            }
+
+            // Statik bankadan çek
+            const finalBank = bank || questionBanks[8]["Özdeşlikler"];
+
+            if (usedQuestions.size >= finalBank.length) {
+                usedQuestions.clear();
+            }
+
+            let idx;
+            do {
+                idx = Math.floor(Math.random() * finalBank.length);
+            } while (usedQuestions.has(idx));
+
+            usedQuestions.add(idx);
+
+            const qData = finalBank[idx];
+            return {
+                q: qData.q,
+                a: qData.a,
+                options: [qData.a, ...qData.d].sort(() => Math.random() - 0.5)
+            };
+        }
+
+        // --- ENTITIES ---
+        class Worm {
+            constructor(x, teamIdx) {
+                this.x = x; this.team = teamIdx;
+                this.radius = 12;
+                this.y = getTerrainHeight(x) - this.radius;
+                this.angle = 0;
+                this.aimAngle = -Math.PI / 4;
+                this.health = 100; this.dead = false;
+                this.vx = 0; this.vy = 0; this.animTimer = 0;
+
+                if (x > width / 2) this.flip();
+            }
+
+            flip() {
+                if (this.angle === 0) {
+                    this.angle = Math.PI;
+                    this.aimAngle = -Math.PI - this.aimAngle;
+                } else {
+                    this.angle = 0;
+                    this.aimAngle = -Math.PI - this.aimAngle;
+                }
+            }
+
+            setFacing(dir) {
+                if (dir > 0 && this.angle !== 0) this.flip();
+                if (dir < 0 && this.angle === 0) this.flip();
+            }
+
+            update() {
+                if (this.dead) return;
+
+                this.vy += 0.3;
+
+                let nextX = this.x + this.vx;
+                let nextY = getTerrainHeight(nextX);
+                let currY = getTerrainHeight(this.x);
+                let slope = currY - nextY;
+
+                if (this.grounded && slope > 12) {
+                    this.vx = 0;
+                } else {
+                    this.x += this.vx;
+                }
+
+                this.y += this.vy;
+                this.vx *= 0.85;
+
+                let ty = getTerrainHeight(this.x);
+                if (this.y + 10 > ty) {
+                    this.y = ty - 10;
+                    this.vy = 0;
+                    this.grounded = true;
+                } else {
+                    this.grounded = false;
+                }
+
+                this.animTimer++;
+
+                if (this.y > waterLevel + 10) {
+                    this.health = 0; this.dead = true;
+                    createSplash(this.x, this.y); AudioSys.playSplash(); showComment('water');
+                    checkDeaths(); updateHUD(); checkGameOver();
+                }
+                if (this.x < 0) this.x = 0; if (this.x > width) this.x = width;
+            }
+
+            draw() {
+                if (this.dead) return;
+                ctx.save(); ctx.translate(this.x, this.y);
+                const teamData = teams[this.team];
+
+                if (gameState !== 'FIRE_ANIM') {
+                    ctx.fillStyle = teamData.color; ctx.font = "bold 11px Nunito"; ctx.textAlign = "center";
+                    ctx.shadowColor = "black"; ctx.shadowBlur = 2;
+                    ctx.fillText(this.health + "%", 0, -35); ctx.shadowBlur = 0;
+                }
+
+                const lookDir = Math.cos(this.angle) > 0 ? 1 : -1;
+                ctx.fillStyle = teamData.body; ctx.strokeStyle = teamData.outline; ctx.lineWidth = 1.5;
+                let breath = Math.sin(this.animTimer * 0.1);
+
+                for (let i = 0; i < 4; i++) {
+                    let ox = i === 0 ? -5 * lookDir : (i === 1 ? 0 : (i === 2 ? 2 * lookDir : 4 * lookDir));
+                    let oy = i === 0 ? 5 : (i === 1 ? 0 : (i === 2 ? -8 : -16));
+                    let rad = i === 3 ? 9 : (i === 0 ? 6 : (i === 1 ? 7 : 8));
+                    ctx.beginPath(); ctx.arc(ox, oy + breath, rad, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                }
+
+                ctx.fillStyle = "white";
+                ctx.beginPath(); ctx.arc((4 * lookDir) + (3 * lookDir), -18 + breath, 3.5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc((4 * lookDir) + (7 * lookDir), -18 + breath, 3.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "black";
+                ctx.beginPath(); ctx.arc((4 * lookDir) + (4 * lookDir), -18 + breath, 1.5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc((4 * lookDir) + (8 * lookDir), -18 + breath, 1.5, 0, Math.PI * 2); ctx.fill();
+
+                if (teams[currentPlayer].worms.includes(this)) {
+                    ctx.fillStyle = this.team === 0 ? "#2563eb" : (this.team === 1 ? "#dc2626" : (this.team === 2 ? "#15803d" : "#7e22ce"));
+                    ctx.fillRect((4 * lookDir) - 6, -24 + breath, 12, 3);
+                    ctx.fillRect((4 * lookDir) + (lookDir > 0 ? -6 : 4), -24 + breath, 2, 8);
+                }
+
+                if (teams[currentPlayer].worms.includes(this) && gameState !== "FIRE_ANIM") {
+                    const hX = 4 * lookDir, hY = -16 + breath;
+                    const ax = hX + Math.cos(this.aimAngle) * 70, ay = hY + Math.sin(this.aimAngle) * 70;
+                    ctx.beginPath(); ctx.moveTo(hX, hY); ctx.lineTo(ax, ay);
+                    ctx.strokeStyle = "rgba(255,255,255,0.4)"; ctx.setLineDash([3, 3]); ctx.stroke(); ctx.setLineDash([]);
+                    ctx.strokeStyle = teamData.color; ctx.beginPath(); ctx.arc(ax, ay, 8, 0, Math.PI * 2);
+                    ctx.moveTo(ax - 12, ay); ctx.lineTo(ax + 12, ay); ctx.moveTo(ax, ay - 12); ctx.lineTo(ax, ay + 12); ctx.stroke();
+                }
+                ctx.restore();
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, angle, force) {
+                this.x = x; this.y = y; this.radius = 5;
+                const speed = force * 20;
+                this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+                this.active = true; this.timer = 0;
+            }
+            update() {
+                if (!this.active) return;
+                this.x += this.vx; this.y += this.vy; this.vy += 0.25; this.vx += wind * 0.005;
+                this.timer++;
+                if (this.timer % 3 === 0) particles.push({ x: this.x, y: this.y, vx: (Math.random() - 0.5), vy: (Math.random() - 0.5), life: 0.8, color: "gray", size: 3 });
+
+                if (this.x < -100 || this.x > width + 100) { this.active = false; showComment('miss'); endTurnDelayed(1000); return; }
+
+                // BUG FIX: Check collision with worms FIRST
+                for (let t of teams) {
+                    for (let w of t.worms) {
+                        if (!w.dead && Math.hypot(w.x - this.x, w.y - this.y) < 25) {
+                            explode(this.x, this.y, 50);
+                            this.active = false;
+                            return;
+                        }
+                    }
+                }
+
+                let ty = getTerrainHeight(this.x);
+                if (this.y > waterLevel) { this.active = false; createSplash(this.x, this.y); AudioSys.playSplash(); showComment('water'); endTurnDelayed(1000); return; }
+
+                if (this.y > ty) {
+                    explode(this.x, this.y, 50);
+                    this.active = false;
+                    return;
+                }
+            }
+            draw() {
+                if (!this.active) return;
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(Math.atan2(this.vy, this.vx));
+                ctx.fillStyle = "#374151"; ctx.beginPath(); ctx.ellipse(0, 0, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(6, 0, 4, -Math.PI / 2, Math.PI / 2); ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
+        function init() {
+            window.addEventListener('resize', resize);
+            setupControls();
+            resize();
+            requestAnimationFrame(loop);
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            waterLevel = height - 40;
+            if (gameState === "MENU") generateMap();
+        }
+
+        // --- MAP GENERATION (Single Screen) ---
+        function generateMap() {
+            terrainY = [];
+            terrainTexture = [];
+
+            const seed = Math.random() * 100;
+            const freq1 = 0.01 + Math.random() * 0.01;
+            const freq2 = 0.03 + Math.random() * 0.02;
+
+            for (let x = 0; x <= width; x++) {
+                let noise = (height * 0.5) +
+                    Math.sin(x * freq1 + seed) * 100 +
+                    Math.sin(x * freq2 - seed) * 50 +
+                    Math.cos(x * 0.03) * 20;
+
+                if (Math.sin(x * 0.02 + seed) > 0.7) noise += 80;
+                if (Math.cos(x * 0.015 - seed) < -0.8) noise -= 60;
+                noise += (Math.random() - 0.5) * 10;
+
+                if (noise > waterLevel + 50) noise = waterLevel + 50;
+                if (noise < 50) noise = 50;
+                terrainY[x] = noise;
+            }
+
+            for (let k = 0; k < 2; k++) {
+                for (let i = 1; i < width - 1; i++) {
+                    terrainY[i] = (terrainY[i - 1] + terrainY[i] + terrainY[i + 1]) / 3;
+                }
+            }
+
+            for (let sx = 0; sx < width; sx += 20) {
+                let surfaceY = terrainY[Math.floor(sx)] || 0;
+                for (let sy = surfaceY + 10; sy < height; sy += 25 + Math.random() * 15) {
+                    let size = 2 + Math.random() * 4;
+                    let offsetX = (Math.random() - 0.5) * 15;
+                    let offsetY = (Math.random() - 0.5) * 15;
+                    terrainTexture.push({
+                        x: sx + offsetX,
+                        y: sy + offsetY,
+                        r: size
+                    });
+                }
+            }
+        }
+
+        function getTerrainHeight(x) {
+            let ix = Math.floor(x);
+            if (ix < 0) ix = 0; if (ix >= width) ix = width - 1;
+            return terrainY[ix] || height;
+        }
+
+        // --- SPAWN LOGIC (Distributed) ---
+        function getSafeSpawnX(sectorIndex, totalSectors) {
+            let safeWidth = width * 0.8;
+            let startX = (width - safeWidth) / 2;
+            let sectorSize = safeWidth / (totalSectors - 1);
+
+            let targetX = startX + (sectorIndex * sectorSize);
+
+            let bestX = targetX;
+            let highestY = 9999;
+            for (let x = targetX - 40; x < targetX + 40; x += 10) {
+                if (x < 0 || x > width) continue;
+                let y = getTerrainHeight(x);
+                if (y < waterLevel - 60 && y < highestY) { highestY = y; bestX = x; }
+            }
+            return bestX;
+        }
+
+        function explode(x, y, radius) {
+            explosions.push({ x, y, r: 0, maxR: radius });
+            AudioSys.playExplosion();
+
+            for (let i = 0; i < 30; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15,
+                    life: 1.0 + Math.random() * 0.5,
+                    color: Math.random() > 0.5 ? "#FFA500" : "#555",
+                    size: 3 + Math.random() * 3
+                });
+            }
+
+            let start = Math.floor(x - radius);
+            let end = Math.floor(x + radius);
+
+            for (let i = start; i <= end; i++) {
+                if (i < 0 || i >= width) continue;
+                let dx = i - x;
+                let dy = Math.sqrt(radius * radius - dx * dx);
+                let circleBottom = y + dy;
+
+                if (terrainY[i] < circleBottom) {
+                    terrainY[i] = Math.max(terrainY[i], circleBottom);
+                }
+            }
+
+            terrainTexture = terrainTexture.filter(t => {
+                let d = Math.hypot(t.x - x, t.y - y);
+                return d > radius;
+            });
+
+            let hit = false;
+            teams.forEach(t => t.worms.forEach(w => {
+                let d = Math.hypot(w.x - x, w.y - y);
+                if (d < radius + 30) {
+                    hit = true;
+                    let dmg = Math.floor((1 - d / (radius + 30)) * 80);
+                    if (dmg < 5) dmg = 5;
+                    w.health = Math.max(0, w.health - dmg);
+                    floatTexts.push({ x: w.x, y: w.y - 30, text: "-" + dmg, life: 1.5, vy: -1 });
+
+                    let ang = Math.atan2(w.y - y, w.x - x);
+                    w.vx = Math.cos(ang) * 10;
+                    w.vy = Math.sin(ang) * 10 - 5;
+                    w.onGround = false;
+                }
+            }));
+
+            checkDeaths(); updateHUD();
+            if (hit) showComment('hit'); else showComment('miss');
+            endTurnDelayed();
+        }
+
+        function createSplash(x, y) {
+            for (let i = 0; i < 25; i++) particles.push({ x: x, y: y, vx: (Math.random() - 0.5) * 12, vy: -Math.random() * 10, life: 1, color: "rgba(200,230,255,0.9)", size: 4 });
+        }
+
+        function startGame(players) {
+            totalPlayers = players;
+            document.getElementById('start-screen').style.display = 'none';
+            generateMap();
+            AudioSys.init();
+
+            teams = [];
+            let sectors = totalPlayers === 2 ? 2 : totalPlayers;
+
+            for (let i = 0; i < totalPlayers; i++) {
+                let conf = teamConfigs[i];
+                let spawnX = getSafeSpawnX(i, totalPlayers);
+
+                teams.push({
+                    name: conf.name, color: conf.color, bodyColor: conf.body, outline: conf.outline,
+                    bgClass: conf.bg, worms: [new Worm(spawnX, i)], health: 100
+                });
+            }
+
+            setupHUD();
+            currentPlayer = Math.floor(Math.random() * totalPlayers);
+            newTurn();
+        }
+
+        function setupHUD() {
+            const container = document.getElementById('health-bars-container');
+            container.innerHTML = '';
+            teams.forEach((t, i) => {
+                let div = document.createElement('div');
+                div.className = "flex flex-col items-center";
+                div.innerHTML = `
+                    <div class="bg-gray-800/90 border-2 text-white px-2 py-1 rounded-lg shadow-lg flex flex-col items-center min-w-[70px]" style="border-color:${t.color}">
+                        <span class="text-[10px] font-bold" style="color:${t.color}">${t.name}</span>
+                        <span id="p${i}-health" class="text-lg game-font">100</span>
+                    </div>
+                    <div class="w-16 md:w-20 h-3 bg-gray-800 border border-gray-600 rounded-full mt-1 overflow-hidden">
+                        <div id="p${i}-bar" class="h-full w-full transition-all duration-300 ${t.bgClass}"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateHUD() {
+            teams.forEach((t, i) => {
+                document.getElementById(`p${i}-health`).innerText = t.health;
+                document.getElementById(`p${i}-bar`).style.width = Math.min(100, t.health) + "%";
+            });
+        }
+
+        function goToMenu() {
+            gameState = "MENU";
+            clearInterval(turnInterval);
+            document.getElementById('start-screen').style.display = 'flex';
+            // Reset to grade selection
+            document.getElementById('grade-selection').classList.remove('hidden');
+            document.getElementById('topic-selection').classList.add('hidden');
+            document.getElementById('player-selection').classList.add('hidden');
+            document.getElementById('message-area').classList.add('hidden');
+            document.getElementById('game-over-controls').classList.add('hidden');
+            document.getElementById('math-modal').classList.add('hidden');
+            document.getElementById('btn-quiz').classList.remove('hidden');
+            document.getElementById('btn-fire').classList.add('hidden');
+
+            projectiles = []; explosions = []; particles = []; floatTexts = [];
+            usedQuestions.clear();
+            teams.forEach(t => { t.worms = []; t.health = 100; });
+        }
+
+        function newTurn() {
+            if (checkGameOver()) return;
+            turnChangePending = false;
+
+            let loopCount = 0;
+            do {
+                currentPlayer = (currentPlayer + 1) % totalPlayers;
+                loopCount++;
+            } while (teams[currentPlayer].health <= 0 && loopCount < totalPlayers + 1);
+
+            gameState = "PLAYING";
+            wind = Math.floor((Math.random() * 20) - 10);
+            document.getElementById('wind-text').innerText = Math.abs(wind);
+            let icon = document.getElementById('wind-icon');
+            icon.className = wind > 0 ? "fas fa-arrow-right text-blue-400" : (wind < 0 ? "fas fa-arrow-left text-red-400" : "fas fa-minus");
+
+            resetActionButtons();
+
+            turnTimer = 45;
+            const tEl = document.getElementById('turn-timer');
+            tEl.innerText = turnTimer;
+            tEl.classList.remove('timer-warning');
+
+            clearInterval(turnInterval);
+            turnInterval = setInterval(() => {
+                if (gameState === "PLAYING" || gameState === "AIMING") {
+                    turnTimer--;
+                    tEl.innerText = turnTimer;
+                    if (turnTimer <= 5) {
+                        tEl.classList.add('timer-warning');
+                        AudioSys.playTick();
+                    }
+                    if (turnTimer <= 0) { showMessage("SÜRE BİTTİ!", "orange"); endTurnDelayed(1000); }
+                }
+            }, 1000);
+
+            showMessage(`${teams[currentPlayer].name} TURU`, teams[currentPlayer].color);
+        }
+
+        function resetActionButtons() {
+            document.getElementById('btn-quiz').classList.remove('hidden');
+            document.getElementById('btn-fire').classList.add('hidden');
+            document.getElementById('power-container').classList.add('hidden');
+            power = 0; isPowering = false;
+        }
+
+        function startCharging() {
+            if (gameState === "AIMING") {
+                gameState = "CHARGING";
+                isPowering = true;
+                power = 0;
+                powerDir = 1.5;
+            }
+        }
+        function stopChargingAndFire() {
+            if (gameState !== "CHARGING") return;
+            isPowering = false; gameState = "FIRE_ANIM"; AudioSys.playShoot();
+            const w = teams[currentPlayer].worms[0];
+            const fireX = w.x + Math.cos(w.aimAngle) * 20, fireY = (w.y - 15) + Math.sin(w.aimAngle) * 20;
+            projectiles.push(new Projectile(fireX, fireY, w.aimAngle, power / 100));
+            document.getElementById('btn-fire').classList.add('hidden');
+            document.getElementById('power-container').classList.add('hidden');
+        }
+
+        function endTurnDelayed(ms = 2000) {
+            if (turnChangePending) return;
+            turnChangePending = true;
+            clearInterval(turnInterval);
+            gameState = "TURN_CHANGE";
+            setTimeout(newTurn, ms);
+        }
+
+        function checkGameOver() {
+            let aliveTeams = teams.filter(t => t.health > 0);
+
+            if (aliveTeams.length === 0) {
+                gameState = "GAME_OVER";
+                showMessage("BERABERE!", "#ffffff", true);
+                showComment('draw');
+                showGameOverUI();
+                return true;
+            } else if (aliveTeams.length === 1 && teams.length > 1) {
+                gameState = "GAME_OVER";
+                let winner = aliveTeams[0];
+                showMessage(`${winner.name} KAZANDI!`, winner.color, true);
+                showComment('win');
+                showGameOverUI();
+                return true;
+            }
+            return false;
+        }
+
+        function showMessage(msg, color, permanent = false) {
+            const box = document.getElementById('message-area');
+            const txt = document.getElementById('message-text');
+            txt.innerText = msg; txt.style.color = color;
+            box.classList.remove('hidden');
+            if (!permanent) setTimeout(() => box.classList.add('hidden'), 2000);
+        }
+
+        function showGameOverUI() {
+            document.getElementById('game-over-controls').classList.remove('hidden');
+        }
+
+        function loop() {
+            const grad = ctx.createLinearGradient(0, 0, 0, height);
+            grad.addColorStop(0, "#0f172a"); grad.addColorStop(0.5, "#3b82f6"); grad.addColorStop(1, "#93c5fd");
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = "rgba(255,255,255,0.15)"; ctx.beginPath(); ctx.arc(width * 0.85, height * 0.15, 60, 0, Math.PI * 2); ctx.fill();
+
+            // Draw Terrain Shape
+            ctx.beginPath();
+            ctx.moveTo(0, height);
+            ctx.lineTo(0, terrainY[0]);
+            for (let x = 1; x < width; x += 2) ctx.lineTo(x, terrainY[x]);
+            ctx.lineTo(width, terrainY[width - 1]);
+            ctx.lineTo(width, height);
+            ctx.closePath();
+
+            ctx.fillStyle = "#4a3c31";
+            ctx.fill();
+
+            ctx.save();
+            ctx.clip();
+            let soilGrad = ctx.createLinearGradient(0, 0, 0, height);
+            soilGrad.addColorStop(0, "rgba(80, 60, 40, 1)");
+            soilGrad.addColorStop(1, "rgba(20, 15, 10, 1)");
+            ctx.fillStyle = soilGrad;
+            ctx.fill();
+
+            ctx.fillStyle = "rgba(0,0,0,0.4)";
+            for (let t of terrainTexture) {
+                if (t.y > terrainY[Math.floor(t.x)]) {
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+
+            ctx.lineWidth = 4; ctx.lineCap = "round";
+            for (let x = 0; x < width; x += 4) {
+                if (terrainY[x] < waterLevel) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, terrainY[x]);
+                    ctx.lineTo(x + 4, terrainY[x + 4]);
+                    ctx.strokeStyle = "#8b7355";
+                    ctx.stroke();
+                }
+            }
+
+            ctx.fillStyle = "rgba(20, 50, 80, 0.7)"; ctx.fillRect(0, waterLevel, width, height - waterLevel);
+            ctx.fillStyle = "rgba(30, 60, 90, 0.4)"; ctx.beginPath();
+            let waveOffset = Date.now() * 0.003;
+            ctx.moveTo(0, waterLevel);
+            for (let x = 0; x <= width; x += 30) ctx.lineTo(x, waterLevel + Math.sin(x * 0.03 + waveOffset) * 8);
+            ctx.lineTo(width, height); ctx.lineTo(0, height); ctx.fill();
+
+            teams.forEach(t => t.worms.forEach(w => { w.update(); w.draw(); }));
+            projectiles.forEach((p, i) => { p.update(); p.draw(); if (!p.active) projectiles.splice(i, 1); });
+            explosions.forEach((e, i) => {
+                e.r += 4; ctx.fillStyle = `rgba(255, 200, 0, ${1 - e.r / e.maxR})`;
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+                if (e.r < e.maxR * 0.7) { ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(e.x, e.y, e.r * 0.6, 0, Math.PI * 2); ctx.fill(); }
+                if (e.r > e.maxR) explosions.splice(i, 1);
+            });
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.03;
+                ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 1; if (p.life <= 0) particles.splice(i, 1);
+            });
+            floatTexts.forEach((ft, i) => {
+                ft.y += ft.vy; ft.life -= 0.02;
+                ctx.save(); ctx.font = "bold 20px Fredoka One";
+                ctx.fillStyle = `rgba(255, 255, 0, ${ft.life})`; ctx.strokeStyle = `rgba(0, 0, 0, ${ft.life})`; ctx.lineWidth = 3;
+                ctx.strokeText(ft.text, ft.x, ft.y); ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore(); if (ft.life <= 0) floatTexts.splice(i, 1);
+            });
+
+            if (isPowering) {
+                power += powerDir; if (power >= 100 || power <= 0) powerDir *= -1;
+                document.getElementById('power-fill').style.width = power + "%";
+                if (Math.floor(power) % 5 === 0) AudioSys.playCharge(power);
+            }
+            requestAnimationFrame(loop);
+        }
+
+        function setupControls() {
+            const getActiveWorm = () => teams[currentPlayer].worms[0];
+            const setupBtn = (id, action) => {
+                const el = document.getElementById(id);
+                let t = null;
+                const start = (e) => {
+                    e.preventDefault();
+                    if (t) clearInterval(t);
+                    if (gameState === "PLAYING" || gameState === "AIMING") {
+                        action();
+                        t = setInterval(action, 40);
+                    }
+                }
+                const end = (e) => {
+                    e.preventDefault();
+                    if (t) { clearInterval(t); t = null; }
+                }
+                el.addEventListener('mousedown', start);
+                el.addEventListener('touchstart', start, { passive: false });
+                el.addEventListener('mouseup', end);
+                el.addEventListener('mouseleave', end);
+                el.addEventListener('touchend', end);
+                el.addEventListener('touchcancel', end);
+            };
+
+            setupBtn('btn-left', () => {
+                const w = getActiveWorm();
+                w.vx = -1.5;
+                w.setFacing(-1);
+            });
+            setupBtn('btn-right', () => {
+                const w = getActiveWorm();
+                w.vx = 1.5;
+                w.setFacing(1);
+            });
+
+            setupBtn('btn-aim-up', () => {
+                const w = getActiveWorm();
+                if (w.angle === 0) w.aimAngle -= 0.03;
+                else w.aimAngle += 0.03;
+            });
+            setupBtn('btn-aim-down', () => {
+                const w = getActiveWorm();
+                if (w.angle === 0) w.aimAngle += 0.03;
+                else w.aimAngle -= 0.03;
+            });
+
+            document.getElementById('btn-jump').addEventListener('click', () => {
+                if (gameState === "PLAYING" || gameState === "AIMING") {
+                    const w = getActiveWorm();
+                    if (w.grounded) {
+                        w.vy = -6;
+                        w.vx = 4 * (w.angle === 0 ? 1 : -1);
+                        AudioSys.playJump();
+                    }
+                }
+            });
+
+            document.getElementById('btn-quiz').addEventListener('click', () => { AudioSys.playTone(300, "sine", 0.1); if (gameState === "PLAYING") { const q = generateQuestion(); renderQuestion(q); gameState = "AIMING"; document.getElementById('math-modal').classList.remove('hidden'); } });
+            function renderQuestion(qData) {
+                document.getElementById('question-text').innerText = qData.q;
+                const grid = document.getElementById('answers-grid'); grid.innerHTML = '';
+                qData.options.forEach(opt => {
+                    const btn = document.createElement('button'); btn.className = "bg-gray-700 hover:bg-gray-600 text-white p-4 rounded-lg font-mono text-lg transition border border-gray-500 active:scale-95";
+                    btn.innerText = opt; btn.onclick = () => {
+                        document.getElementById('math-modal').classList.add('hidden');
+                        if (opt === qData.a) { gameState = "AIMING"; document.getElementById('btn-quiz').classList.add('hidden'); document.getElementById('btn-fire').classList.remove('hidden'); document.getElementById('power-container').classList.remove('hidden'); showMessage("KİLİT AÇILDI!", "#4ade80"); AudioSys.playTone(600, "sine", 0.1); }
+                        else { showMessage("HATALI! SIRA GEÇTİ", "#ef4444"); AudioSys.playTone(200, "sawtooth", 0.3); showComment('miss'); endTurnDelayed(2000); }
+                    }; grid.appendChild(btn);
+                });
+            }
+            const fireBtn = document.getElementById('btn-fire');
+            fireBtn.addEventListener('mousedown', startCharging); fireBtn.addEventListener('mouseup', stopChargingAndFire);
+            fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startCharging(); }); fireBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopChargingAndFire(); });
+        }
+        function checkDeaths() { teams.forEach(t => { let total = 0; t.worms.forEach(w => { if (!w.dead) total += w.health; }); t.health = total; }); }
+        window.onload = init;
+    </script>
+</body>
+
+</html>
