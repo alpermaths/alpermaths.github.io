@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anlaşmalı Matematik - Deal or No Deal Matematik Oyunu</title>
+    <meta name="description"
+        content="Deal or No Deal tarzı eğlenceli matematik oyunu. Kutuları aç, soruları çöz, parayı kazan!">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Ana Menü -->
+    <div id="main-menu" class="screen active">
+        <div class="menu-container">
+            <div class="logo-container">
+                <h1 class="game-title">
+                    <span class="title-icon">💰</span>
+                    Anlaşmalı Matematik
+                </h1>
+                <p class="subtitle">Kutuları Aç, Soruları Çöz, Parayı Kazan!</p>
+            </div>
+            <div class="menu-buttons">
+                <button class="btn btn-primary" id="start-btn">
+                    <span class="btn-icon">🎮</span>
+                    Oyuna Başla
+                </button>
+                <button class="btn btn-secondary" id="how-to-play-btn">
+                    <span class="btn-icon">📖</span>
+                    Nasıl Oynanır?
+                </button>
+            </div>
+            <div class="math-symbols">
+                <span>💵</span>
+                <span>📦</span>
+                <span>🧮</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nasıl Oynanır Ekranı -->
+    <div id="how-to-play" class="screen">
+        <div class="modal-content">
+            <h2>🎯 Nasıl Oynanır?</h2>
+            <div class="instructions">
+                <div class="instruction-step">
+                    <span class="step-number">1</span>
+                    <p><strong>Oyun modunu seç:</strong> Bilgisayara karşı veya arkadaşınla oyna</p>
+                </div>
+                <div class="instruction-step">
+                    <span class="step-number">2</span>
+                    <p><strong>Kendi kutunu seç:</strong> Oyunun sonuna kadar saklayacağın kutu</p>
+                </div>
+                <div class="instruction-step">
+                    <span class="step-number">3</span>
+                    <p><strong>Kutu aç:</strong> Diğer kutulardan birini seç ve soruyu çöz</p>
+                </div>
+                <div class="instruction-step">
+                    <span class="step-number">4</span>
+                    <p><strong>Doğru cevap?</strong> Kutunun parasını kazan!</p>
+                </div>
+                <div class="instruction-step">
+                    <span class="step-number">5</span>
+                    <p><strong>Yanlış cevap?</strong> Sıra rakibine geçer</p>
+                </div>
+                <div class="instruction-step">
+                    <span class="step-number">6</span>
+                    <p><strong>Banka teklifi:</strong> Kabul et veya kendi kutunla devam et!</p>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="back-to-menu-btn">
+                <span class="btn-icon">↩️</span>
+                Ana Menüye Dön
+            </button>
+        </div>
+    </div>
+
+    <!-- İsim Giriş Ekranı -->
+    <div id="name-input-screen" class="screen">
+        <div class="modal-content">
+            <h2 id="name-input-title">👋 Merhaba!</h2>
+            <p id="name-input-desc">Yarışmacının adını girelim:</p>
+            <input type="text" id="player-name-input" class="name-input" placeholder="Adınız..." maxlength="12"
+                value="Oyuncu">
+            <button class="btn btn-primary" id="confirm-name-btn">
+                <span class="btn-icon">➡️</span>
+                Devam Et
+            </button>
+        </div>
+    </div>
+
+    <!-- Sınıf Seçimi -->
+    <div id="grade-select" class="screen">
+        <div class="modal-content">
+            <h2>📚 Sınıf Seç</h2>
+            <div class="grade-buttons">
+                <button class="mode-btn" id="grade-0-btn">
+                    <div class="mode-icon">🧸</div>
+                    <div class="mode-title">Okul Öncesi</div>
+                    <div class="mode-desc">Toplama, Çıkarma, Şekiller</div>
+                </button>
+                <button class="mode-btn" id="grade-5-btn">
+                    <div class="mode-icon">5️⃣</div>
+                    <div class="mode-title">5. Sınıf</div>
+                    <div class="mode-desc">Doğal sayılar, kesirler, yüzdeler</div>
+                </button>
+                <button class="mode-btn" id="grade-6-btn">
+                    <div class="mode-icon">6️⃣</div>
+                    <div class="mode-title">6. Sınıf</div>
+                    <div class="mode-desc">Tam sayılar, oran-orantı, cebir</div>
+                </button>
+                <button class="mode-btn" id="grade-7-btn">
+                    <div class="mode-icon">7️⃣</div>
+                    <div class="mode-title">7. Sınıf</div>
+                    <div class="mode-desc">Rasyonel sayılar, denklemler</div>
+                </button>
+                <button class="mode-btn" id="grade-8-btn">
+                    <div class="mode-icon">8️⃣</div>
+                    <div class="mode-title">8. Sınıf</div>
+                    <div class="mode-desc">Üslü sayılar, özdeşlikler</div>
+                </button>
+            </div>
+            <button class="btn btn-secondary" id="back-from-grade-btn">
+                <span class="btn-icon">↩️</span>
+                Geri
+            </button>
+        </div>
+    </div>
+
+    <!-- Konu Seçimi -->
+    <div id="topic-select" class="screen">
+        <div class="modal-content topic-select-modal">
+            <h2 id="topic-select-title">📖 Konu Seç</h2>
+            <div class="topic-buttons" id="topic-buttons">
+                <!-- JS ile doldurulacak -->
+            </div>
+            <button class="btn btn-secondary" id="back-from-topic-btn">
+                <span class="btn-icon">↩️</span>
+                Geri
+            </button>
+        </div>
+    </div>
+
+    <!-- Oyun Modu Seçimi -->
+    <div id="mode-select" class="screen">
+        <div class="modal-content mode-select-modal">
+            <h2>🎯 Oyun Modunu Seç</h2>
+            <div class="mode-buttons">
+                <button class="mode-btn" id="vs-ai-btn">
+                    <div class="mode-icon">🤖</div>
+                    <div class="mode-title">Bilgisayara Karşı</div>
+                    <div class="mode-desc">Yapay zeka rakibine karşı oyna</div>
+                </button>
+                <button class="mode-btn" id="vs-player-btn">
+                    <div class="mode-icon">👥</div>
+                    <div class="mode-title">2 Kişilik</div>
+                    <div class="mode-desc">Aynı cihazda 2 arkadaş</div>
+                </button>
+                <button class="mode-btn" id="vs-player-3-btn">
+                    <div class="mode-icon">👫👤</div>
+                    <div class="mode-title">3 Kişilik</div>
+                    <div class="mode-desc">Aynı cihazda 3 arkadaş</div>
+                </button>
+                <button class="mode-btn" id="vs-player-4-btn">
+                    <div class="mode-icon">👫👫</div>
+                    <div class="mode-title">4 Kişilik</div>
+                    <div class="mode-desc">Aynı cihazda 4 arkadaş</div>
+                </button>
+            </div>
+            <button class="btn btn-secondary" id="back-from-mode-btn">
+                <span class="btn-icon">↩️</span>
+                Geri
+            </button>
+        </div>
+    </div>
+
+    <!-- Kutu Seçim Ekranı -->
+    <div id="box-select" class="screen">
+        <div class="box-select-container">
+            <div class="box-select-header">
+                <h2 id="box-select-title">📦 Oyuncu 1 - Kutunu Seç!</h2>
+                <p class="box-select-desc">Bu kutu oyun sonuna kadar seninle kalacak. İçindeki para sana ait olabilir!
+                </p>
+            </div>
+            <div class="box-select-grid" id="box-select-grid">
+                <!-- Kutular JS ile doldurulacak -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Oyun Ekranı -->
+    <div id="game-screen" class="screen">
+        <!-- Sol Para Paneli (Düşük Değerler - Mavi) -->
+        <div class="money-panel left-panel">
+            <div class="money-item low-value" data-value="1">1 TL</div>
+            <div class="money-item low-value" data-value="5">5 TL</div>
+            <div class="money-item low-value" data-value="10">10 TL</div>
+            <div class="money-item low-value" data-value="25">25 TL</div>
+            <div class="money-item low-value" data-value="50">50 TL</div>
+            <div class="money-item low-value" data-value="100">100 TL</div>
+            <div class="money-item low-value" data-value="200">200 TL</div>
+            <div class="money-item low-value" data-value="300">300 TL</div>
+            <div class="money-item low-value" data-value="400">400 TL</div>
+            <div class="money-item low-value" data-value="500">500 TL</div>
+            <div class="money-item low-value" data-value="750">750 TL</div>
+            <div class="money-item low-value" data-value="1000">1.000 TL</div>
+            <div class="money-item low-value" data-value="5000">5.000 TL</div>
+        </div>
+
+        <!-- Orta Panel -->
+        <div class="center-panel">
+            <!-- Dinamik Oyuncu Paneli (Dashboard) -->
+            <div class="players-dashboard" id="players-dashboard">
+                <div id="players-grid" class="players-grid">
+                    <!-- JS ile oluşturulacak: -->
+                    <!-- 
+                        <div class="player-card active" id="p-card-0">
+                            <div class="player-card-header">
+                                <div class="player-avatar">👤</div>
+                                <div class="player-name">Oyuncu 1</div>
+                            </div>
+                            <div class="player-card-body">
+                                <div class="player-box-info">
+                                    <span class="box-icon">📦</span>
+                                    <span class="box-num">?</span>
+                                </div>
+                                <div class="player-money">0 TL</div>
+                            </div>
+                            <div class="turn-badge">SIRA SİZDE</div>
+                        </div> 
+                        -->
+                </div>
+
+                <!-- Ortak Banka Alanı -->
+                <div class="bank-display-area">
+                    <div class="bank-icon-small">🏦</div>
+                    <div class="bank-info">
+                        <div class="bank-label">BANKA TEKLİFİ</div>
+                        <div class="bank-offer" id="bank-offer">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kutular Grid -->
+            <div class="boxes-container" id="boxes-container">
+                <!-- 25 kutu JavaScript ile oluşturulacak -->
+            </div>
+
+            <!-- Alt Bilgi -->
+            <div class="game-footer">
+                <div class="boxes-remaining">
+                    <span>Kalan Kutu:</span>
+                    <span id="boxes-count">25</span>
+                </div>
+                <button class="btn-icon-only" id="sound-btn">🔊</button>
+                <button class="btn-icon-only" id="menu-btn">🏠</button>
+            </div>
+        </div>
+
+        <!-- Sağ Para Paneli (Yüksek Değerler) -->
+        <div class="money-panel right-panel">
+            <div class="money-item mid-value" data-value="10000">10.000 TL</div>
+            <div class="money-item mid-value" data-value="20000">20.000 TL</div>
+            <div class="money-item mid-value" data-value="30000">30.000 TL</div>
+            <div class="money-item mid-value" data-value="40000">40.000 TL</div>
+            <div class="money-item mid-value" data-value="50000">50.000 TL</div>
+            <div class="money-item mid-value" data-value="100000">100.000 TL</div>
+            <div class="money-item high-value" data-value="150000">150.000 TL</div>
+            <div class="money-item high-value" data-value="200000">200.000 TL</div>
+            <div class="money-item high-value" data-value="250000">250.000 TL</div>
+            <div class="money-item high-value" data-value="500000">500.000 TL</div>
+            <div class="money-item high-value" data-value="750000">750.000 TL</div>
+            <div class="money-item high-value" data-value="1000000">1.000.000 TL</div>
+        </div>
+
+        <!-- Soru Paneli -->
+        <div id="question-panel" class="question-panel hidden">
+            <div class="question-content">
+                <div class="question-header-row">
+                    <div class="selected-box-info">
+                        <span>Kutu</span>
+                        <span class="selected-box-number" id="selected-box-number">1</span>
+                    </div>
+                    <div class="question-timer-container">
+                        <span class="timer-icon">⏱️</span>
+                        <span class="question-timer" id="question-timer">15</span>
+                    </div>
+                </div>
+                <h3 class="question-title">📝 Soruyu Çöz!</h3>
+                <div class="question-text" id="question-text"></div>
+                <div class="answer-options" id="answer-options">
+                    <!-- Cevaplar JS ile doldurulacak -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Kutu Açılma Animasyonu -->
+        <div id="box-reveal-panel" class="box-reveal-panel hidden">
+            <div class="box-reveal-content">
+                <div class="reveal-box-container">
+                    <div class="reveal-box" id="reveal-box">
+                        <div class="box-lid"></div>
+                        <div class="box-body">
+                            <div class="box-number-reveal" id="box-number-reveal">1</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="reveal-value hidden" id="reveal-value">0 TL</div>
+                <div class="reveal-result hidden" id="reveal-result"></div>
+            </div>
+        </div>
+
+        <!-- AI Düşünme Paneli -->
+        <div id="ai-thinking-panel" class="ai-thinking-panel hidden">
+            <div class="ai-thinking-content">
+                <div class="ai-avatar">🤖</div>
+                <h3>Bilgisayar Düşünüyor...</h3>
+                <div class="thinking-box">
+                    <div class="thinking-box-number" id="ai-box-number">?</div>
+                </div>
+                <div class="thinking-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Banka Teklifi Paneli -->
+        <div id="bank-panel" class="bank-panel hidden">
+            <div class="bank-content">
+                <div class="bank-icon">🏦</div>
+                <h2>BANKA ARIYOR...</h2>
+                <div class="bank-phone-animation" id="bank-phone">
+                    <div class="phone-ring">📞</div>
+                </div>
+                <div class="bank-offer-reveal hidden" id="bank-offer-reveal">
+                    <div class="bank-offer-player" id="bank-offer-player"
+                        style="font-size: 1.2rem; font-weight: bold; color: #ffd700; margin-bottom: 0.5rem;">📣 Oyuncu
+                        için</div>
+                    <h2>BANKA TEKLİFİ</h2>
+                    <div class="bank-amount" id="bank-amount">0 TL</div>
+                    <p class="bank-message">Kabul edersen bu parayı al ve oyundan çık!</p>
+                    <div class="bank-buttons">
+                        <button class="btn btn-reject" id="reject-offer-btn">
+                            <span class="btn-icon">❌</span>
+                            ANLAŞMA YOK
+                        </button>
+                        <button class="btn btn-accept" id="accept-offer-btn">
+                            <span class="btn-icon">✅</span>
+                            ANLAŞMA VAR
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Final Tur Bildirimi -->
+        <div id="final-round-panel" class="final-round-panel hidden">
+            <div class="final-round-content">
+                <div class="final-round-icon">🏁</div>
+                <h2>FİNAL TURU!</h2>
+                <p><strong id="final-round-player-name">Oyuncu</strong> için son 3 kutu hakkı!</p>
+                <div class="final-round-boxes-display">
+                    <span class="final-box-icon">📦</span>
+                    <span class="final-box-icon">📦</span>
+                    <span class="final-box-icon">📦</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Anlaşma Kabul Bildirimi -->
+        <div id="deal-accepted-notification" class="final-round-panel hidden">
+            <div class="final-round-content notification-content-style">
+                <div class="final-round-icon">🤝</div>
+                <h2>ANLAŞMA SAĞLANDI!</h2>
+                <p><strong id="notif-player-name">Oyuncu</strong> banka teklifini kabul etti.</p>
+                <div class="bank-amount" id="notif-amount" style="margin: 1rem 0; color: var(--success);">50.000 TL
+                </div>
+            </div>
+        </div>
+
+        <!-- Final Tur Göstergesi (Oyun ekranında) -->
+        <div id="final-round-indicator" class="final-round-indicator hidden">
+            <span class="indicator-icon">🏁</span>
+            <span class="indicator-text">Kalan Kutu: <strong id="final-round-boxes-left">3</strong></span>
+        </div>
+    </div>
+
+    <!-- Oyun Sonu Ekranı -->
+    <div id="game-over" class="screen">
+        <div class="modal-content game-over-modal">
+            <div class="winner-announcement">
+                <div class="winner-icon" id="winner-icon">🏆</div>
+                <h2 id="winner-title">Kazanan!</h2>
+            </div>
+            <div class="final-scores">
+                <div class="final-score player1-final">
+                    <div class="final-player-box" id="final-player1-box">?</div>
+                    <div class="final-player-name">Oyuncu 1</div>
+                    <div class="final-player-money" id="final-player1-money">0 TL</div>
+                    <div class="final-box-value" id="final-player1-box-value">Kutu: ? TL</div>
+                </div>
+                <div class="vs-divider">VS</div>
+                <div class="final-score player2-final">
+                    <div class="final-player-box" id="final-player2-box">?</div>
+                    <div class="final-player-name" id="final-player2-name">Bilgisayar</div>
+                    <div class="final-player-money" id="final-player2-money">0 TL</div>
+                    <div class="final-box-value" id="final-player2-box-value">Kutu: ? TL</div>
+                </div>
+            </div>
+            <div class="result-buttons">
+                <button class="btn btn-secondary" id="go-menu-btn">
+                    <span class="btn-icon">🏠</span>
+                    Ana Menü
+                </button>
+                <button class="btn btn-primary" id="play-again-btn">
+                    <span class="btn-icon">🔄</span>
+                    Tekrar Oyna
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Overlay -->
+    <div id="victory-overlay" class="hidden">
+        <h1 class="victory-title">🏆 KAZANDIN! 🏆</h1>
+        <div class="victory-desc" id="victory-message">Tebrikler!</div>
+        <button class="btn btn-primary" id="victory-close-btn" style="margin-top: 30px;">
+            Harika!
+        </button>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/questions.js"></script>
+    <script src="js/questionBank.js"></script>
+    <script src="js/game.js"></script>
+</body>
+
+</html>
